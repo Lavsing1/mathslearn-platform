@@ -5,5 +5,5 @@ compatibility_date = "2026-10-20"
 [[d1_databases]]
 binding = "DB"
 database_name = "mathslearn-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "d99e509c-9b92-4cf8-af69-893149a2762d"
 migrations_dir = "migrations"
