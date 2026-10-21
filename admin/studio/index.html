@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1f5f8b">
+<title>Mathematics Lecture Studio</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Crect width=%2764%27 height=%2764%27 rx=%2714%27 fill=%27%231f5f8b%27/%3E%3Ctext x=%2732%27 y=%2745%27 font-size=%2742%27 text-anchor=%27middle%27 fill=%27white%27 font-family=%27serif%27%3E%E2%88%91%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/katex.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/home.css">
+<style>
+#mlAdminBar{position:sticky;top:0;z-index:99999;background:#0d1b36;color:#fff;padding:9px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 3px 14px #00122c33;font:600 13px system-ui}
+#mlAdminBar .mlbrand{font-weight:800;margin-right:auto}#mlAdminBar button{border:1px solid #5c7195;background:#1d3154;color:#fff;border-radius:8px;padding:8px 10px;cursor:pointer;font-weight:700}#mlAdminBar button.primary{background:#2563eb;border-color:#2563eb}#mlAdminBar button.danger{background:#9f1239;border-color:#9f1239}#mlAdminMsg{font-weight:500;opacity:.9}
+.ml-image-block{margin:18px auto;text-align:center;max-width:100%}.ml-image-block img{max-height:900px;object-fit:contain}.ml-image-block figcaption{font-size:.88em;opacity:.75;margin-top:6px}
+#mlImageDialog{position:fixed;inset:0;background:#071226aa;z-index:100000;display:none;align-items:center;justify-content:center;padding:18px}#mlImageDialog .card{background:white;color:#12213c;border-radius:16px;padding:20px;max-width:460px;width:100%;box-shadow:0 20px 80px #0004}#mlImageDialog label{display:block;margin:10px 0 5px;font-weight:700}#mlImageDialog input,#mlImageDialog select{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:8px}#mlImageDialog .actions{display:flex;gap:8px;margin-top:14px}#mlImageDialog button{padding:9px 12px;border-radius:8px;border:0;background:#2563eb;color:white;font-weight:700}#mlImageDialog button.secondary{background:#e2e8f0;color:#172554}
+</style>
+</head>
+<body>
+<div id="home"></div>
+<div id="editor" class="hidden"></div>
+<div id="pres" class="hidden"></div>
+<div id="modal" class="hidden"></div>
+<div id="printarea" class="lv"></div>
+<script src="lib/katex.min.js"></script>
+<script src="js/01-core.js"></script>
+<script src="js/02-editor.js"></script>
+<script src="js/03-presenter.js"></script>
+<script src="js/04-extras.js"></script>
+<script src="js/05-files.js"></script>
+<script src="js/06-books.js"></script>
+<script src="js/07-quiz.js"></script>
+<script src="js/08-home.js"></script>
+<script src="js/09-start.js"></script>
+<div id="mlImageDialog" role="dialog" aria-modal="true" aria-label="Insert book image"><div class="card"><h2 style="margin-top:0">Insert image into current block</h2><p>Choose a picture from your computer. It is resized before being stored with the book content.</p><label for="mlImageFile">Image file</label><input id="mlImageFile" type="file" accept="image/png,image/jpeg,image/webp"><label for="mlImageAlt">Alternative text</label><input id="mlImageAlt" maxlength="180" placeholder="Describe the diagram"><label for="mlImageCaption">Caption</label><input id="mlImageCaption" maxlength="240" placeholder="Optional caption"><label for="mlImageWidth">Image width</label><select id="mlImageWidth"><option value="100">Full width</option><option value="80">80%</option><option value="60">60%</option><option value="40">40%</option></select><label for="mlImageAlign">Alignment</label><select id="mlImageAlign"><option value="center">Center</option><option value="left">Left</option><option value="right">Right</option></select><div class="actions"><button id="mlImageInsert">Insert image</button><button class="secondary" id="mlImageCancel">Cancel</button></div><p id="mlImageStatus" aria-live="polite"></p></div></div>
+<script src="js/10-mathslearn.js"></script>
+</body>
+</html>

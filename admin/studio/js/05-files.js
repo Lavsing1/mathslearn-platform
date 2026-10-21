@@ -1,0 +1,73 @@
+'use strict';
+/* ====================================================================
+   FILES: save into a chosen file, PDF export, built-in PDF reader
+   ==================================================================== */
+/* ---------- save into a file you choose (File System Access API) ---------- */
+const FSOK=!!(window.showSaveFilePicker&&window.showOpenFilePicker),FS={lib:null,map:{},need:false,q:Promise.resolve(),t:null},FTYPES=[{description:'Lecture file',accept:{'application/json':['.json']}}];
+const idbOpen=()=>new Promise((res,rej)=>{const r=indexedDB.open('mls-files',1);r.onupgradeneeded=()=>r.result.createObjectStore('h');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+async function hput(k,v){try{const d=await idbOpen();await new Promise((res,rej)=>{const t=d.transaction('h','readwrite');t.objectStore('h').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}}
+async function hget(k){try{const d=await idbOpen();return await new Promise((res,rej)=>{const q=d.transaction('h').objectStore('h').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}catch(e){return undefined}}
+async function hclear(){try{const d=await idbOpen();await new Promise((res,rej)=>{const t=d.transaction('h','readwrite');t.objectStore('h').clear();t.oncomplete=res;t.onerror=()=>rej(t.error)})}catch(e){}}
+async function fsCheck(){FS.need=false;for(const fh of [FS.lib,...Object.values(FS.map)]){if(fh&&fh.queryPermission){try{if(await fh.queryPermission({mode:'readwrite'})!=='granted')FS.need=true}catch(e){FS.need=true}}}}
+async function fsInit(){if(!FSOK)return;FS.lib=(await hget('lib'))||null;for(const id of Object.keys(db)){const fh=await hget('lec:'+id);if(fh)FS.map[id]=fh}await fsCheck();fsUI()}
+function fsSync(){if(!FS.lib&&!Object.keys(FS.map).length)return;clearTimeout(FS.t);FS.t=setTimeout(()=>{FS.q=FS.q.then(fsRun).catch(()=>{})},700)}
+async function fsWrite(fh,obj){try{if(fh.queryPermission&&await fh.queryPermission({mode:'readwrite'})!=='granted'){FS.need=true;return false}const w=await fh.createWritable();await w.write(JSON.stringify(obj,null,1));await w.close();return true}catch(e){return false}}
+async function fsRun(){FS.need=false;const names=[];let bad=false;
+  if(FS.lib){if(await fsWrite(FS.lib,{app:'MathLectureStudio',version:2,lectures:Object.values(db),books:Object.values(BK),quizzes:Object.values(QZ)}))names.push(FS.lib.name);else bad=true}
+  for(const id of Object.keys(FS.map)){if(!db[id])continue;if(await fsWrite(FS.map[id],{app:'MathLectureStudio',version:2,lectures:[db[id]]}))names.push(FS.map[id].name);else bad=true}
+  if(bad)setStatus('Saved in the browser only. Press "Allow saving to file" on the Home screen.');else if(names.length&&(localStorage.setItem('mls.lastbackup',String(Date.now())),1))setStatus('Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · file: '+names.join(', '));fsUI()}
+function fsUI(){const e=$('#fsline');if(!e)return;const n=[FS.lib&&('all lectures → '+FS.lib.name),...Object.keys(FS.map).filter(id=>db[id]).map(id=>(db[id].title||'lecture')+' → '+FS.map[id].name)].filter(Boolean);
+  e.innerHTML=(n.length?'Auto-saving into your files: '+n.map(esc).join(' · ')+' ':'')+(FS.need?'<button class="btn" data-act="fallow">Allow saving to file</button> ':'')+(n.length?'<button class="btn" data-act="funlink">Stop auto-saving to files</button>':'')}
+function fsMerge(arr){const ids=[];arr.forEach(x=>{if(!x||!Array.isArray(x.steps))return;if(x.id&&db[x.id]){if((x.updated||0)>db[x.id].updated){backup(db[x.id],0);delete db[x.id];importLec(x)}ids.push(x.id)}else ids.push(importLec(x).id)});return ids}
+
+/* ---------- real PDF export + built-in PDF reader (pdf.js and pdf-lib are bundled, work offline) ---------- */
+const PR={doc:null,scale:1.2,fit:true,att:null,cur:1,last:null};
+document.body.insertAdjacentHTML('beforeend','<input type="file" id="pdfin" accept=".pdf,application/pdf" hidden><div id="pdfv" hidden><div class="pvb"><button class="btn" data-act="pdfpick">Open PDF</button><button class="btn" data-act="pdfprev" title="Previous page">◀</button><input id="pdfpg" type="number" min="1" value="1" aria-label="Page number"><span id="pdfn"></span><button class="btn" data-act="pdfnext" title="Next page">▶</button><button class="btn" data-act="pdfzo" title="Zoom out">−</button><button class="btn" data-act="pdfzi" title="Zoom in">+</button><button class="btn" data-act="pdffit">Fit width</button><button class="btn pri" id="pdfedit" data-act="pdfedit" hidden>Edit as lecture</button><span class="sp"></span><button class="btn" data-act="pdfclose">Close</button></div><div id="pdfpages"></div></div>');
+document.addEventListener('change',async e=>{if(e.target.id==='pdfin'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';try{pdfOpen(new Uint8Array(await f.arrayBuffer()),f.name)}catch(x){note('Could not open that PDF.')}}
+  if(e.target.id==='pdfpg')pdfGo(+e.target.value)});
+async function loadPdfjs(){if(window.__pdfjs)return window.__pdfjs;const bu=src=>URL.createObjectURL(new Blob([src],{type:'text/javascript'}));const m=await import(bu(await libText('lib-pdfjs','lib/pdfjs.src.js','__PDFJS_SRC')));globalThis.pdfjsWorker=await import(bu(await libText('lib-pdfworker','lib/pdfjs-worker.src.js','__PDFJS_WORKER_SRC')));m.GlobalWorkerOptions.workerSrc='./pdf-worker-not-used.mjs';window.__pdfjs=m;return m}
+async function pdfOpen(bytes,name){try{const lib=await loadPdfjs();const doc=await lib.getDocument({data:bytes.slice(0)}).promise;PR.doc=doc;PR.att=null;try{const a=await doc.getAttachments();if(a&&a['lecture.mls.json'])PR.att=a['lecture.mls.json'].content}catch(e){}
+  $('#pdfedit').hidden=!PR.att;$('#pdfv').hidden=false;PR.cur=1;PR.fit=true;await pdfLayout()}catch(e){note('This PDF could not be opened: '+((e&&e.message)||e))}}
+async function pdfLayout(){const doc=PR.doc;if(!doc)return;const box=$('#pdfpages');box.innerHTML='';$('#pdfn').textContent=' / '+doc.numPages;$('#pdfpg').max=doc.numPages;
+  const p1=await doc.getPage(1);if(PR.fit)PR.scale=Math.max(.3,Math.min(3,(box.clientWidth-24)/p1.getViewport({scale:1}).width));
+  const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting&&!en.target.dataset.d){en.target.dataset.d=1;pdfPaint(en.target)}}),{root:box,rootMargin:'700px'});
+  for(let i=1;i<=doc.numPages;i++){const pg=i===1?p1:await doc.getPage(i),vp=pg.getViewport({scale:PR.scale}),d=document.createElement('div');d.className='pdp';d.dataset.n=i;d.style.width=vp.width+'px';d.style.height=vp.height+'px';box.appendChild(d);io.observe(d)}
+  box.onscroll=()=>{requestAnimationFrame(()=>{const t=box.getBoundingClientRect().top+60;for(const d of box.children){if(d.getBoundingClientRect().bottom>t){PR.cur=+d.dataset.n;$('#pdfpg').value=PR.cur;break}}})}}
+async function pdfPaint(d){const pg=await PR.doc.getPage(+d.dataset.n),r=devicePixelRatio||1,vp=pg.getViewport({scale:PR.scale*r}),c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;c.style.width='100%';c.style.height='100%';d.appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise}
+function pdfGo(n){if(!PR.doc)return;n=Math.max(1,Math.min(PR.doc.numPages,n||1));const d=$('#pdfpages').children[n-1];if(d){PR.cur=n;$('#pdfpg').value=n;d.scrollIntoView({block:'start'})}}
+async function loadPdfLib(){if(window.PDFLib)return window.PDFLib;const e=document.getElementById('lib-pdflib');if(e){const s=document.createElement('script');s.textContent=e.textContent;document.head.appendChild(s)}else await loadScript('lib/pdf-lib.min.js');return window.PDFLib}
+async function makePdf(l,prog,bk){if(!cssOk())throw noCss();
+  const PL=await loadPdfLib(),keep=L,a5=bk&&bk.size==='a5',W=a5?559:794,H=a5?794:1123,M=a5?44:56,AW=a5?419.53:595.28,AH=a5?595.28:841.89,CW=W-2*M,CH=H-2*M-14,FS=a5?16:18,ENT=a5?17:25;let host;
+  try{const cs=bk?chaps(bk):[l],b0=cs[0]||l,st={...DEF,...b0.settings,theme:'light',bg:'#ffffff',fg:'#111111',size:FS,paper:'none',pm:'cont'},vars=lvStyle(st),cls='lv lay-'+(st.layout||'classic')+' mode-cont'+(bk?' bookpdf':'');
+    host=document.createElement('div');host.className=cls;host.style.cssText=vars+';position:absolute;left:-10000px;top:0;width:'+CW+'px;background:#fff;color:#111';let html='';
+    if(!bk){L=l;html='<h1 class="ct">'+rich(l.title,1)+'</h1>'+(l.subtitle?'<div class="cs">'+rich(l.subtitle,1)+'</div>':'')+(metaLine(l)?'<div class="cs">'+metaLine(l)+'</div>':'')+l.steps.map((_,i)=>stepAt(i)).join('')}
+    else{const ents=[];cs.forEach((c,k)=>{ents.push({lvl:0,no:'Chapter '+(k+1),t:c.title});let a=0,b=0;c.steps.forEach(s=>{if(s.type==='section'){a++;b=0;ents.push({lvl:1,no:(k+1)+'.'+a,t:s.heading||s.content||''})}else if(s.type==='subsection'){b++;ents.push({lvl:2,no:(k+1)+'.'+a+'.'+b,t:s.heading||s.content||''})}})});
+      const T=Math.max(1,Math.ceil(ents.length/ENT));
+      html='<section class="blk bktitle"><div style="padding-top:22%;text-align:center"><h1 class="ct" style="font-size:2.6em">'+rich(bk.title,1)+'</h1>'+(bk.subtitle?'<div class="cs" style="font-size:1.3em">'+rich(bk.subtitle,1)+'</div>':'')+(bk.author?'<div style="margin-top:3em;font-size:1.2em">'+esc(bk.author)+'</div>':'')+(bk.org?'<div class="cs">'+esc(bk.org)+'</div>':'')+'</div></section>';
+      for(let t=0;t<T;t++)html+='<section class="blk pbk toc">'+(t?'':'<h2 class="tch">Contents</h2>')+ents.slice(t*ENT,(t+1)*ENT).map((e,j)=>'<div class="te l'+e.lvl+'" data-i="'+(t*ENT+j)+'"><span>'+(e.lvl?esc(e.no)+'&nbsp;&nbsp;':'<b>'+esc(e.no)+'.</b>&nbsp;&nbsp;')+rich(e.t,1)+'</span><i class="dots"></i><b class="pn">0</b></div>').join('')+'</section>';
+      cs.forEach((c,k)=>{L=c;html+='<section class="blk pbk" data-toc="0"><div class="chh">Chapter '+(k+1)+'</div><div class="chn">'+rich(c.title,1)+'</div></section>'+c.steps.map((_,i)=>stepAt(i)).join('')})}
+    host.innerHTML=html;host.querySelectorAll('.rv').forEach(x=>x.classList.add('show'));document.body.appendChild(host);await new Promise(r=>setTimeout(r,80));
+    const kids=[...host.children],top0=host.getBoundingClientRect().top,pos=kids.map(k=>{const r=k.getBoundingClientRect();return{k,t:r.top-top0,h:r.height}});
+    const pages=[];let cur=[],y0=0;pos.forEach(b=>{const forced=b.k.classList.contains('pbk');if(cur.length&&(forced||b.t+b.h-y0>CH)){pages.push(cur);cur=[];y0=b.t}cur.push(b)});if(cur.length)pages.push(cur);
+    if(bk){const pageOf=new Map();pages.forEach((pg,pi)=>pg.forEach(b=>pageOf.set(b.k,pi)));[...host.querySelectorAll('[data-toc]')].forEach((m,i)=>{let e=m;while(e&&e.parentElement!==host)e=e.parentElement;const r=host.querySelector('.te[data-i="'+i+'"] .pn');if(r)r.textContent=String(pageOf.get(e)+1)})}
+    const all=cssText(),FR=/@font-face\s*\{[^}]*\}/g,faces=all.match(FR)||[],rest=all.replace(FR,''),xs=new XMLSerializer(),pdf=await PL.PDFDocument.create();
+    const RARE={Caligraphic:/mathcal|mathscr/,Fraktur:/mathfrak/,Script:/mathscr/,SansSerif:/mathsf|textsf/,Typewriter:/mathtt|texttt/};
+    for(let n=0;n<pages.length;n++){prog&&prog(n+1,pages.length);
+      const inner=pages[n].map(b=>{const c=b.k.cloneNode(true);if(b.h>CH)c.style.zoom=(CH/b.h).toFixed(3);return xs.serializeToString(c)}).join('');
+      const css=rest+faces.filter(f=>{const m=/KaTeX_(\w+)/.exec(f);return !(m&&RARE[m[1]]&&!RARE[m[1]].test(inner))}).join('\n'),foot=bk?(n>0?String(n+1):''):(n+1)+' / '+pages.length;
+      const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'"><foreignObject width="'+W+'" height="'+H+'"><div xmlns="http://www.w3.org/1999/xhtml" class="'+cls+'" style="'+vars+';position:relative;width:'+W+'px;height:'+H+'px;box-sizing:border-box;padding:'+M+'px;overflow:hidden;background:#fff;color:#111"><style><![CDATA['+css+']]></style>'+inner+'<div style="position:absolute;bottom:22px;left:0;right:0;text-align:center;font:12px sans-serif;color:#666">'+foot+'</div></div></foreignObject></svg>';
+      const img=new Image();await new Promise((res,rej)=>{img.onload=res;img.onerror=()=>rej(new Error('page '+(n+1)+' could not be drawn'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});
+      const SC=bk?1.6:2,cv=document.createElement('canvas');cv.width=Math.round(W*SC);cv.height=Math.round(H*SC);const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);
+      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',bk?.8:.9));if(!blob)throw new Error('your browser blocked drawing the page (use Chrome or Edge)');
+      const im=await pdf.embedJpg(new Uint8Array(await blob.arrayBuffer())),pg=pdf.addPage([AW,AH]);pg.drawImage(im,{x:0,y:0,width:AW,height:AH})}
+    pdf.setTitle((bk?bk.title:l.title)||'Untitled');const au=bk?bk.author:l.author;if(au)pdf.setAuthor(au);pdf.setCreator('Mathematics Lecture Studio');
+    await pdf.attach(new TextEncoder().encode(JSON.stringify(bk?{app:'MathLectureStudio',version:2,book:bk,lectures:cs}:{app:'MathLectureStudio',version:2,lectures:[l]})),'lecture.mls.json',{mimeType:'application/json',description:'Editable data for Mathematics Lecture Studio',creationDate:new Date(),modificationDate:new Date()});
+    return await pdf.save()}
+  finally{L=keep;if(host)host.remove()}}
+async function savePdfBytes(bytes,name,fh){
+  if(fh){try{const w=await fh.createWritable();await w.write(bytes);await w.close();return 'Saved to '+fh.name+'. Press Save PDF again to overwrite the same file.'}catch(e){}}
+  deliver(name,new Blob([bytes],{type:'application/pdf'}),null);return 'Downloaded as '+name+'. If nothing happened, use the Download button at the bottom of the screen.'}
+let DLT='';
+function deliver(name,blob,text){if(/\.json$/.test(name)){try{localStorage.setItem('mls.lastbackup',String(Date.now()))}catch(e){}}const u=URL.createObjectURL(blob);DLT=text||'';const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  let b=$('#dlbar');if(b)b.remove();b=document.createElement('div');b.id='dlbar';b.innerHTML='<span>File ready: <b>'+esc(name)+'</b></span><a class="btn" href="'+u+'" download="'+esc(name)+'">Download</a><a class="btn" href="'+u+'" target="_blank" rel="noopener">Open</a>'+(text?'<button class="btn" data-act="dltext">Show as text</button>':'')+'<button class="btn" data-act="dlclose">✕</button><div class="hint">Nothing downloaded? You may be inside a preview or in-app viewer. Open this file in Chrome or Safari directly, or use "Show as text" and copy it.</div>';document.body.appendChild(b);setTimeout(()=>{const x=$('#dlbar');if(x)x.remove()},30000)}
+function note(msg){modal('<p>'+esc(msg)+'</p><button class="btn pri" data-act="mclose">OK</button>')}
