@@ -16,9 +16,9 @@ export async function onRequestGet({ request, env }) {
   }
   const q = cleanText(url.searchParams.get("q"), 100);
   if (q) {
-    conditions.push("(title LIKE ? OR topic LIKE ? OR course LIKE ? OR board_exam LIKE ? OR seo_description LIKE ?)");
+    conditions.push("(title LIKE ? OR topic LIKE ? OR subject LIKE ? OR chapter LIKE ? OR excerpt LIKE ? OR course LIKE ? OR board_exam LIKE ? OR seo_description LIKE ?)");
     const pattern = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
-    binds.push(pattern, pattern, pattern, pattern, pattern);
+    binds.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
   }
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   const result = await env.DB.prepare(`SELECT id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,created_at,updated_at FROM content ${where} ORDER BY updated_at DESC LIMIT 200`).bind(...binds).all();
