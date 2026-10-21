@@ -41,7 +41,7 @@
 <button type="button" class="category-card" data-kind="Important Questions"><span class="category-icon">⭐</span><span><strong>Important Questions</strong><small>Exam-focused questions</small></span></button>
 <button type="button" class="category-card" data-kind="Formula Sheet"><span class="category-icon">∑</span><span><strong>Formula Sheet</strong><small>Formulae and quick revision</small></span></button>
 </div></div><div id="contentWorkflow" hidden><div class="studio-topline"><div><button type="button" id="backToCategories" class="btn-secondary workflow-back">← All content types</button><h2 id="formHeading">Create content</h2><p class="muted">Complete the details, then write with live preview.</p></div><span id="selectedKind" class="muted"></span></div>
-<div class="admin-form">
+<div id="metadataPanel"><h3>Content details</h3><div class="admin-form">
 <label>Content title *<input id="title" required placeholder="e.g. Class 10 — Quadratic Equations"></label>
 <label>Content type<select id="type"><option>Study Notes</option><option>Question Paper</option><option>Solved Paper</option><option>Solved Examples</option><option>Unsolved Questions</option><option>Important Questions</option><option>Formula Sheet</option></select></label>
 <label>Study level<select id="level"><option>School Mathematics</option><option>Higher Secondary</option><option>Undergraduate</option><option>Entrance Preparation</option></select></label>
@@ -54,9 +54,7 @@
 <label class="full">Thumbnail image URL (optional)<input id="thumbnail" type="url" placeholder="https://…"><small class="muted">Use a public HTTPS image URL. Leave blank for a text card.</small></label>
 <label>Paper type<select id="paperType"><option value="">Not a question paper</option><option>Sample Paper</option><option>Previous Year Paper</option><option>Practice Set</option><option>Solved Paper</option></select></label>
 <label>SEO / student description<input id="description" placeholder="Short summary"></label>
-</div>
-<h3>Content metadata</h3>
-<div class="toolrow" aria-label="Formatting toolbar">
+</div><button type="button" id="continueToStudio" class="btn-primary" style="margin:12px 0 22px">Continue to Writing Studio →</button></div><div id="writingStudio" hidden><div class="toolrow" aria-label="Formatting toolbar">
 <button data-cmd="bold"><b>B</b></button><button data-cmd="italic"><i>I</i></button><button data-cmd="underline"><u>U</u></button><button data-cmd="formatBlock" data-val="h2">Heading</button><button data-cmd="formatBlock" data-val="p">Paragraph</button><label class="color-tool">Text colour <input id="textColor" type="color" value="#183153" aria-label="Text colour"></label><label class="color-tool">Highlight <input id="highlightColor" type="color" value="#fff19c" aria-label="Highlight colour"></label><label>Text size <select id="textSize"><option value="3">Normal</option><option value="4">Large</option><option value="5">Extra large</option><option value="6">Heading</option></select></label><button data-cmd="insertUnorderedList">• Bullets</button><button data-cmd="insertOrderedList">1. Numbered</button><button data-cmd="justifyCenter">Center</button>
 </div>
 <div class="toolrow" aria-label="Math symbols">
@@ -68,6 +66,7 @@
 <div class="actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button id="saveDraft" class="btn-secondary">Save draft</button><button id="previewBtn" class="btn-secondary">Refresh preview</button><button id="publishBtn" class="btn-primary">Publish to students</button><button id="clearBtn" class="btn-secondary">New / clear</button></div><p id="writeMessage" class="status-line" aria-live="polite"></p></div>
 <div class="preview-column"><h3>👁️ Live preview</h3><div id="previewMeta" class="preview-meta"></div><article id="livePreview" class="live-preview article-body"></article><div id="preview" class="preview" hidden></div></div></div></div>
 </section>
+</div>
 <section id="pane-manage" class="admin-pane" hidden><h2>Manage notes and papers</h2><p class="muted">Only authenticated admins can see drafts and change publishing status.</p><div id="contentList" class="admin-list">Loading…</div></section>
 <section id="pane-settings" class="admin-pane" hidden><h2>Publishing checklist</h2><div class="notice-box">Before public launch, configure D1 binding <code>DB</code>, apply SQL migrations, and set Cloudflare secrets <code>ADMIN_EMAIL</code>, <code>ADMIN_PASSWORD</code>, and <code>SESSION_SECRET</code>. Use a long unique password and keep secrets out of GitHub.</div><ul><li>Student-facing content appears only after publishing.</li><li>Mathematical notation is rendered by KaTeX when students open the article.</li><li>Student PDF downloads include a diagonal <strong>mathslearn.online</strong> watermark.</li><li>Keep a D1 backup/export and test restore before relying on the platform.</li><li>Use original or licensed question papers and images.</li></ul></section>
 </div></div>
