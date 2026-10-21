@@ -179,7 +179,7 @@ function filterRender() {
   $('papersList').innerHTML=papers.length?papers.map(card).join(''):'<p class="muted">No published question papers match these filters yet.</p>';
   // Render LaTeX in catalogue cards as well as in the full reader.
   if (window.renderMathInElement) {
-    const mathOptions = {delimiters:[{left:'$',right:'$',display:true},{left:'\\\\[',right:'\\\\]',display:true},{left:'\\\\(',right:'\\\\)',display:false}], throwOnError:false};
+    const mathOptions = {delimiters:[{left:'$',right:'$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}], throwOnError:false};
     window.renderMathInElement($('notesList'), mathOptions);
     window.renderMathInElement($('papersList'), mathOptions);
   }
