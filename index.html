@@ -35,8 +35,13 @@
 </section>
 <nav class="content-tabs" aria-label="Content type">
  <button type="button" class="content-tab active" data-panel="notes">📚 Notes</button>
- <button type="button" class="content-tab" data-panel="papers">📝 Question Papers</button>
- <button type="button" class="content-tab" data-panel="student-editor">✎ Student Editor</button>
+ <button type="button" class="content-tab" data-panel="papers">📝 Papers</button>
+ <button type="button" class="content-tab" data-panel="student-editor">✎ Editor</button>
+ <label class="global-type-label">Content
+  <select id="globalContentType" aria-label="Filter by content type">
+   <option value="">All content</option><option value="Study Notes">Notes &amp; Theory</option><option value="Solved Paper">Solved Papers</option><option value="Solved Examples">Solved Examples</option><option value="Unsolved Questions">Practice Questions</option><option value="Important Questions">Important Questions</option><option value="Formula Sheet">Formula Sheets</option>
+  </select>
+ </label>
  <label class="global-board-label">Board / Exam
   <select id="globalBoard" aria-label="Filter by board or exam">
    <option value="">All boards / exams</option><option value="Bihar Board">Bihar Board</option><option value="CBSE">CBSE</option><option value="Other">Other</option>
