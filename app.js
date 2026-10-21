@@ -315,3 +315,23 @@ $('downloadPdf')?.addEventListener('click', async () => {
   } catch(err) { console.error(err); toast('PDF could not be created. Try again or check the article content.'); }
   finally { button.disabled=false;button.textContent=original; }
 });
+
+// Class-first homepage navigation: keep the catalogue filtered by the selected class and show one workspace at a time.
+function setupClassFirstHome(){
+ const cards=[...document.querySelectorAll('.class-card')];
+ const tabs=[...document.querySelectorAll('.content-tab')];
+ const panels={notes:$('notes'),papers:$('papers'),'student-editor':$('student-editor')};
+ function chooseCourse(course){
+  cards.forEach(card=>card.classList.toggle('active',card.dataset.course===course));
+  $('noteCourse').value=course;$('paperCourse').value=course;
+  filterRender();
+ }
+ function choosePanel(name){
+  tabs.forEach(tab=>tab.classList.toggle('active',tab.dataset.panel===name));
+  Object.entries(panels).forEach(([key,panel])=>{if(panel)panel.hidden=key!==name;});
+ }
+ cards.forEach(card=>card.addEventListener('click',()=>chooseCourse(card.dataset.course||'')));
+ tabs.forEach(tab=>tab.addEventListener('click',()=>choosePanel(tab.dataset.panel)));
+ chooseCourse('');choosePanel('notes');
+}
+document.addEventListener('DOMContentLoaded',setupClassFirstHome);
