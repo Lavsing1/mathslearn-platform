@@ -168,7 +168,7 @@ function card(x) {
   const subject=x.subject||'Mathematics', chapter=x.chapter||x.topic||'';
   const image=x.thumbnail_url||x.thumbnail||'';
   const thumb=image?'<img class="content-thumb" src="'+safe(image)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'';
-  return '<article class="content-card">'+thumb+'<span class="pill '+(type==='Question Paper'?'orange':'')+'">'+safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)+'</span><div class="formula">'+safe(chapter||subject)+'</div><strong>'+safe(x.title)+'</strong><p class="muted">'+safe(x.study_level||x.level)+' · '+safe(x.course)+(x.board_exam||x.board?' · '+safe(x.board_exam||x.board):'')+' · '+safe(subject)+(chapter?' · '+safe(chapter):'')+'</p><p class="muted">'+safe(autoExcerpt(x))+'</p><button class="btn-secondary" data-open-content="'+safe(x.id)+'">Read full content →</button></article>';
+  return '<article class="content-card" role="button" tabindex="0" aria-label="Open '+safe(x.title)+'" data-card-open="'+safe(x.id)+'">'+thumb+'<span class="pill '+(type==='Question Paper'?'orange':'')+'">'+safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)+'</span><div class="formula">'+safe(chapter||subject)+'</div><strong>'+safe(x.title)+'</strong><p class="muted">'+safe(x.study_level||x.level)+' · '+safe(x.course)+(x.board_exam||x.board?' · '+safe(x.board_exam||x.board):'')+' · '+safe(subject)+(chapter?' · '+safe(chapter):'')+'</p><p class="muted">'+safe(autoExcerpt(x))+'</p></article>';
 }
 function filterRender() {
   const q='', noteLevel='',noteCourse=lower('selectedCourse'),noteBoard=lower('globalBoard'),noteSubject='',noteTopic='',paperLevel='',paperCourse=lower('selectedCourse'),paperBoard=lower('globalBoard'),paperSubject='',paperTopic='',paperType='',contentType=lower('globalContentType');
@@ -183,21 +183,26 @@ function filterRender() {
     window.renderMathInElement($('notesList'), mathOptions);
     window.renderMathInElement($('papersList'), mathOptions);
   }
-  document.querySelectorAll('[data-open-content]').forEach(btn=>btn.addEventListener('click',()=>openContent(btn.dataset.openContent)));
+  document.querySelectorAll('[data-card-open]').forEach(card=>{
+    const open=()=>openContent(card.dataset.cardOpen,true);
+    card.addEventListener('click',open);
+    card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
+  });
 }
 async function loadPublicContent() {
   try { const d=await api('/api/content?public=1', {method:'GET',headers:{}}); contentCache=d.items||[]; filterRender(); }
   catch(err) { $('notesList').innerHTML='<p class="muted">Live catalogue is not connected yet. Deploy the Cloudflare Pages Functions and configure D1 to enable it.</p>'; $('papersList').innerHTML='<p class="muted">Live catalogue is not connected yet. Deploy the Cloudflare Pages Functions and configure D1 to enable it.</p>'; }
 }
-async function openContent(id) {
+async function openContent(id,fullscreen=false) {
   const x=contentCache.find(item=>item.id===id); if(!x)return;
   $('modalType').textContent=x.content_type||x.type;$('modalTitle').textContent=x.title;
   $('modalMeta').textContent=[x.study_level||x.level,x.course,x.board_exam||x.board,x.subject||'Mathematics',x.chapter||x.topic].filter(Boolean).join(' · ');
   $('modalBody').innerHTML=x.body_html||'<p>No article body has been added yet.</p>';
   if (window.renderMathInElement) window.renderMathInElement($('modalBody'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}], throwOnError:false});
   $('contentModal').hidden=false;document.body.style.overflow='hidden';
+  if(fullscreen){const target=$('contentModalCard');try{if(!document.fullscreenElement&&target.requestFullscreen)await target.requestFullscreen();}catch{target.classList.add('reader-fullscreen-fallback');}}
 }
-function closeModal(){ $('contentModal').hidden=true;document.body.style.overflow=''; }
+function closeModal(){ $('contentModal').hidden=true;document.body.style.overflow='';$('contentModalCard')?.classList.remove('reader-fullscreen-fallback');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});}
 $('modalClose')?.addEventListener('click',closeModal);
 $('readerFullscreen')?.addEventListener('click',async()=>{const target=$('contentModalCard');try{if(!document.fullscreenElement)await target.requestFullscreen();else await document.exitFullscreen();}catch{toast('Fullscreen is not supported in this browser.');}});
 document.addEventListener('fullscreenchange',()=>{const b=$('readerFullscreen');if(b)b.textContent=document.fullscreenElement?'⤢ Exit fullscreen':'⛶ Fullscreen reading';});
@@ -325,6 +330,7 @@ function setupClassFirstHome(){
  function chooseCourse(course){
   cards.forEach(card=>card.classList.toggle('active',card.dataset.course===course));
   $('selectedCourse').value=course;
+  const mobileSelect=$('mobileCourseSelect');if(mobileSelect)mobileSelect.value=course;
   filterRender();
  }
  function choosePanel(name){
@@ -332,6 +338,7 @@ function setupClassFirstHome(){
   Object.entries(panels).forEach(([key,panel])=>{if(panel)panel.hidden=key!==name;});
  }
  cards.forEach(card=>card.addEventListener('click',()=>chooseCourse(card.dataset.course||'')));
+ const mobileSelect=$('mobileCourseSelect');if(mobileSelect){mobileSelect.addEventListener('change',()=>{chooseCourse(mobileSelect.value);});}
  tabs.forEach(tab=>tab.addEventListener('click',()=>choosePanel(tab.dataset.panel)));
  $('globalBoard')?.addEventListener('change',filterRender);
  chooseCourse('');choosePanel('notes');
