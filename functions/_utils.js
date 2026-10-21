@@ -70,12 +70,12 @@ export function sanitizeHtml(input) {
   html = html.replace(/<(script|style|iframe|object|embed|form|input|button|textarea|select|svg|math|link|meta|base)[^>]*>[\s\S]*?<\/\1\s*>/gi, "");
   html = html.replace(/<(script|style|iframe|object|embed|form|input|button|textarea|select|svg|math|link|meta|base)\b[^>]*\/?\s*>/gi, "");
   html = html.replace(/\s+on[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
-  html = html.replace(/\\s+(srcdoc|formaction|xlink:href)\\s*=\\s*("[^"]*"|'[^']*'|[^\\s>]+)/gi, "");
+  html = html.replace(/\s+(srcdoc|formaction|xlink:href)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
   // Preserve only a tiny allowlist of presentation styles emitted by the editor.
-  html = html.replace(/\\s+style\\s*=\\s*("[^"]*"|'[^']*')/gi, (attr) => {
+  html = html.replace(/\s+style\s*=\s*("[^"]*"|'[^']*')/gi, (attr) => {
     const raw = attr.slice(attr.indexOf("=") + 1).trim().replace(/^["']|["']$/g, "");
     const kept = raw.split(";").map(part => part.trim()).filter(part =>
-      /^(color|background-color|font-size|text-align)\\s*:\\s*(#[0-9a-f]{3,8}|rgba?\\([0-9.,%\\s]+\\)|[a-z]{3,20}|(?:[1-9]|[1-5][0-9]|6[0-4])(?:px|pt|em|rem)|left|right|center|justify)\\s*$/i.test(part)
+      /^(color|background-color|font-size|text-align)\s*:\s*(#[0-9a-f]{3,8}|rgba?\([0-9.,%\s]+\)|[a-z]{3,20}|(?:[1-9]|[1-5][0-9]|6[0-4])(?:px|pt|em|rem)|left|right|center|justify)\s*$/i.test(part)
     );
     return kept.length ? ' style="' + kept.join("; ") + '"' : "";
   });
