@@ -23,7 +23,7 @@ async function api(path, options = {}) {
 }
 function normalize(item) {
   return { id:item.id, title:item.title, type:item.content_type || item.type, paperType:item.paper_type || item.paperType || '', level:item.study_level || item.level,
-    course:item.course, board:item.board_exam || item.board || '', topic:item.topic || '', seo:item.seo_description || item.seo || '',
+    course:item.course, board:item.board_exam || item.board || '', topic:item.topic || '', subject:item.subject || '', chapter:item.chapter || item.topic || '', excerpt:item.excerpt || '', thumbnail:item.thumbnail_url || '', seo:item.seo_description || item.seo || '',
     body:item.body_html || item.body || '', status:item.status, createdAt:item.created_at, updatedAt:item.updated_at };
 }
 
@@ -157,15 +157,24 @@ function renderAdminItems() {
 }
 
 // Public D1 catalogue and filters.
+function autoExcerpt(x) {
+  const raw=String(x.excerpt||x.seo_description||x.seo||'').trim();
+  if(raw)return raw.slice(0,360);
+  const plain=String(x.body_html||x.body||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+  return (plain||'Open to read the full content.').slice(0,220);
+}
 function card(x) {
   const type=x.content_type||x.type||'Study Notes';
-  return `<article class="content-card"><span class="pill ${type==='Question Paper'?'orange':''}">${safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)}</span><div class="formula">${safe(x.topic||'Mathematics')}</div><strong>${safe(x.title)}</strong><p class="muted">${safe(x.study_level||x.level)} · ${safe(x.course)}${(x.board_exam||x.board)?' · '+safe(x.board_exam||x.board):''}</p><p class="muted">${safe(x.seo_description||x.seo||'Open to read the full content.')}</p><button class="btn-secondary" data-open-content="${safe(x.id)}">Read content →</button></article>`;
+  const subject=x.subject||'Mathematics', chapter=x.chapter||x.topic||'';
+  const image=x.thumbnail_url||x.thumbnail||'';
+  const thumb=image?'<img class="content-thumb" src="'+safe(image)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'';
+  return '<article class="content-card">'+thumb+'<span class="pill '+(type==='Question Paper'?'orange':'')+'">'+safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)+'</span><div class="formula">'+safe(chapter||subject)+'</div><strong>'+safe(x.title)+'</strong><p class="muted">'+safe(x.study_level||x.level)+' · '+safe(x.course)+(x.board_exam||x.board?' · '+safe(x.board_exam||x.board):'')+' · '+safe(subject)+(chapter?' · '+safe(chapter):'')+'</p><p class="muted">'+safe(autoExcerpt(x))+'</p><button class="btn-secondary" data-open-content="'+safe(x.id)+'">Read full content →</button></article>';
 }
 function filterRender() {
-  const q=lower('searchInput'), noteLevel=lower('noteLevel'),noteCourse=lower('noteCourse'),noteBoard=lower('noteBoard'),noteTopic=lower('noteTopic'),paperLevel=lower('paperLevel'),paperCourse=lower('paperCourse'),paperBoard=lower('paperBoard'),paperType=lower('paperType');
-  const searchMatch=x=>!q||[x.title,x.study_level,x.level,x.course,x.board_exam,x.board,x.topic,x.seo_description,x.seo].join(' ').toLowerCase().includes(q);
-  const notes=contentCache.filter(x=>(x.content_type||x.type)!=='Question Paper'&&(!noteLevel||(x.study_level||x.level).toLowerCase()===noteLevel)&&(!noteCourse||x.course.toLowerCase()===noteCourse)&&(!noteBoard||(x.board_exam||x.board||'').toLowerCase()===noteBoard)&&(!noteTopic||(x.topic||'').toLowerCase().includes(noteTopic))&&searchMatch(x));
-  const papers=contentCache.filter(x=>(x.content_type||x.type)==='Question Paper'&&(!paperLevel||(x.study_level||x.level).toLowerCase()===paperLevel)&&(!paperCourse||x.course.toLowerCase()===paperCourse)&&(!paperBoard||(x.board_exam||x.board||'').toLowerCase()===paperBoard)&&(!paperType||(x.paper_type||x.paperType||'').toLowerCase()===paperType)&&searchMatch(x));
+  const q=lower('searchInput'), noteLevel=lower('noteLevel'),noteCourse=lower('noteCourse'),noteBoard=lower('noteBoard'),noteSubject=lower('noteSubject'),noteTopic=lower('noteTopic'),paperLevel=lower('paperLevel'),paperCourse=lower('paperCourse'),paperBoard=lower('paperBoard'),paperSubject=lower('paperSubject'),paperTopic=lower('paperTopic'),paperType=lower('paperType');
+  const searchMatch=x=>!q||[x.title,x.study_level,x.level,x.course,x.board_exam,x.board,x.topic,x.subject,x.chapter,x.excerpt,x.seo_description,x.seo].join(' ').toLowerCase().includes(q);
+  const notes=contentCache.filter(x=>(x.content_type||x.type)!=='Question Paper'&&(!noteLevel||(x.study_level||x.level).toLowerCase()===noteLevel)&&(!noteCourse||x.course.toLowerCase()===noteCourse)&&(!noteBoard||(x.board_exam||x.board||'').toLowerCase()===noteBoard)&&(!noteSubject||(x.subject||'mathematics').toLowerCase().includes(noteSubject))&&(!noteTopic||(x.chapter||x.topic||'').toLowerCase().includes(noteTopic))&&searchMatch(x));
+  const papers=contentCache.filter(x=>(x.content_type||x.type)==='Question Paper'&&(!paperLevel||(x.study_level||x.level).toLowerCase()===paperLevel)&&(!paperCourse||x.course.toLowerCase()===paperCourse)&&(!paperBoard||(x.board_exam||x.board||'').toLowerCase()===paperBoard)&&(!paperSubject||(x.subject||'mathematics').toLowerCase().includes(paperSubject))&&(!paperTopic||(x.chapter||x.topic||'').toLowerCase().includes(paperTopic))&&(!paperType||(x.paper_type||x.paperType||'').toLowerCase()===paperType)&&searchMatch(x));
   $('notesList').innerHTML=notes.length?notes.map(card).join(''):'<p class="muted">No published notes match these filters yet.</p>';
   $('papersList').innerHTML=papers.length?papers.map(card).join(''):'<p class="muted">No published question papers match these filters yet.</p>';
   document.querySelectorAll('[data-open-content]').forEach(btn=>btn.addEventListener('click',()=>openContent(btn.dataset.openContent)));
@@ -177,16 +186,18 @@ async function loadPublicContent() {
 async function openContent(id) {
   const x=contentCache.find(item=>item.id===id); if(!x)return;
   $('modalType').textContent=x.content_type||x.type;$('modalTitle').textContent=x.title;
-  $('modalMeta').textContent=[x.study_level||x.level,x.course,x.board_exam||x.board,x.topic].filter(Boolean).join(' · ');
+  $('modalMeta').textContent=[x.study_level||x.level,x.course,x.board_exam||x.board,x.subject||'Mathematics',x.chapter||x.topic].filter(Boolean).join(' · ');
   $('modalBody').innerHTML=x.body_html||'<p>No article body has been added yet.</p>';
   if (window.renderMathInElement) window.renderMathInElement($('modalBody'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}], throwOnError:false});
   $('contentModal').hidden=false;document.body.style.overflow='hidden';
 }
 function closeModal(){ $('contentModal').hidden=true;document.body.style.overflow=''; }
 $('modalClose')?.addEventListener('click',closeModal);
+$('readerFullscreen')?.addEventListener('click',async()=>{const target=$('contentModalCard');try{if(!document.fullscreenElement)await target.requestFullscreen();else await document.exitFullscreen();}catch{toast('Fullscreen is not supported in this browser.');}});
+document.addEventListener('fullscreenchange',()=>{const b=$('readerFullscreen');if(b)b.textContent=document.fullscreenElement?'⤢ Exit fullscreen':'⛶ Fullscreen reading';});
 $('contentModal')?.addEventListener('click',e=>{if(e.target===$('contentModal'))closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-['searchInput','noteLevel','noteCourse','noteBoard','noteTopic','paperLevel','paperCourse','paperBoard','paperType'].forEach(id=>$(id)?.addEventListener('input',filterRender));
+['searchInput','noteLevel','noteCourse','noteBoard','noteSubject','noteTopic','paperLevel','paperCourse','paperBoard','paperSubject','paperTopic','paperType'].forEach(id=>$(id)?.addEventListener('input',filterRender));
 $('searchButton')?.addEventListener('click',()=>{filterRender();const q=value('searchInput')||value('noteTopic');$('searchMessage').textContent=q?`Showing published content matching “${q}”.`:'Showing all published content.';});
 $('searchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){$('searchButton').click();$('content-browser').scrollIntoView({behavior:'smooth'});}});
 
