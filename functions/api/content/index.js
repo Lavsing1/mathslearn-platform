@@ -59,7 +59,7 @@ function validate(data) {
   if (!LEVELS.has(study_level)) return { error: "Invalid study level." };
   if (content_type === "Question Paper" && !["Sample Paper","Previous Year Paper","Practice Set","Solved Paper"].includes(paper_type)) return { error: "Select a valid question paper type." };
   if (!course) return { error: "Class/course is required." };
-  if (thumbnail_url && !/^https:\\/\\//i.test(thumbnail_url)) return { error: "Thumbnail URL must start with https://." };
+  if (thumbnail_url && !thumbnail_url.toLowerCase().startsWith("https://")) return { error: "Thumbnail URL must start with https://." };
   if (body_html.length > 300000) return { error: "Content is too large." };
   if (status === "published" && !body_html.trim()) return { error: "Add content before publishing." };
   return { title, content_type, paper_type:content_type === "Question Paper" ? paper_type : "", study_level, course, board_exam, topic, subject, chapter, excerpt, thumbnail_url, seo_description, body_html, status };
