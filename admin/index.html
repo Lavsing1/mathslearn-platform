@@ -30,6 +30,22 @@
 @media(max-width:900px){#pane-manage .admin-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.admin-page{padding:0 8px}.admin-columns>.admin-nav{flex-wrap:nowrap;overflow-x:auto}.admin-columns>.admin-nav button{flex:0 0 auto}#pane-manage .admin-list{grid-template-columns:1fr}}
 
+
+/* FINAL overrides: keep admin tabs horizontal and force compact content grid */
+#workspace .admin-columns{display:block!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important}
+#workspace .admin-columns>.admin-nav{display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px!important;flex-wrap:nowrap!important;width:100%!important;box-sizing:border-box!important;margin:0 0 12px!important;padding:5px 8px!important;background:#eaf1ff!important;border:1px solid var(--line)!important;border-radius:10px!important;overflow-x:auto!important}
+#workspace .admin-columns>.admin-nav button{display:block!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;min-height:0!important;height:auto!important;text-align:center!important;white-space:nowrap!important;padding:7px 14px!important;margin:0!important}
+#workspace .admin-columns>.studio-card{display:block!important;width:100%!important;max-width:none!important;box-sizing:border-box!important;padding:12px!important}
+#pane-manage .admin-list{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:10px!important;width:100%!important;box-sizing:border-box!important}
+#pane-manage .admin-list article{padding:12px!important;min-width:0!important}
+#pane-manage .admin-list article strong{font-size:15px!important}
+#pane-manage .admin-list article p{margin:7px 0!important;font-size:13px!important}
+#pane-manage .admin-list article .manage-actions{gap:5px!important;margin-top:9px!important}
+#pane-manage .admin-list article button{padding:6px 9px!important;font-size:13px!important}
+@media(max-width:1150px){#pane-manage .admin-list{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:900px){#pane-manage .admin-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){#workspace .admin-columns>.admin-nav{justify-content:flex-start!important}#pane-manage .admin-list{grid-template-columns:1fr!important}}
+
 </style>
 </head>
 <body>
