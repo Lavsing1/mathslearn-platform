@@ -18,26 +18,26 @@
   <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☼</button>
 </header>
 <main class="wrap">
-<section id="home" class="hero hero-banner" aria-label="MathsLearn mathematics learning platform">
-  <img src="./mathslearn-hero-banner.png" alt="MathsLearn — Learn Mathematics Better, Faster, Smarter" width="2048" height="682" fetchpriority="high" decoding="async">
-</section>
-<section class="feature-row">
-
-<a class="feature pink-card" href="#notes"><div class="feature-icon">♧</div><div><strong>Study Notes</strong><small>Study level & chapter<br>Theory and examples</small></div></a>
-<a class="feature yellow" href="#papers"><div class="feature-icon">▤</div><div><strong>Question Papers</strong><small>Board, entrance<br>and practice sets</small></div></a>
-<a class="feature green" href="#student-editor"><div class="feature-icon">✎</div><div><strong>Student Editor</strong><small>Write and copy<br>maths expressions</small></div></a>
-<a class="feature purple" href="#papers"><div class="feature-icon">☷</div><div><strong>Practice Tests</strong><small>MCQs, assignments<br>and solutions</small></div></a>
-</section>
-
-<section class="section" id="explore">
- <div class="section-head"><h2>▦ Explore Mathematics</h2><span class="muted">One simple homepage, content grouped by level</span></div>
- <div class="category-grid">
-  <a class="category c1" href="#notes"><strong>School Mathematics</strong><small>Class 9–10</small></a>
-  <a class="category c2" href="#notes"><strong>Higher Secondary</strong><small>Class 11–12</small></a>
-  <a class="category c3" href="#notes"><strong>Undergraduate</strong><small>B.Sc. Mathematics</small></a>
-  <a class="category c4" href="#notes"><strong>Entrance Preparation</strong><small>IIT JAM · ISI · TIFR CAM</small></a>
+<main class="wrap home-dashboard">
+<section class="class-picker section" id="home">
+ <div class="section-head"><h2>Choose Class / Exam</h2><span class="muted">Select a class to view its notes, papers and tools</span></div>
+ <div class="class-grid" role="group" aria-label="Choose class or exam">
+  <button class="class-card active" type="button" data-course=""><strong>All</strong><small>All published content</small></button>
+  <button class="class-card" type="button" data-course="Class 9"><strong>Class 9</strong><small>Mathematics</small></button>
+  <button class="class-card" type="button" data-course="Class 10"><strong>Class 10</strong><small>Mathematics</small></button>
+  <button class="class-card" type="button" data-course="Class 11"><strong>Class 11</strong><small>Mathematics</small></button>
+  <button class="class-card" type="button" data-course="Class 12"><strong>Class 12</strong><small>Mathematics</small></button>
+  <button class="class-card" type="button" data-course="B.Sc Mathematics"><strong>B.Sc</strong><small>Mathematics</small></button>
+  <button class="class-card" type="button" data-course="IIT JAM"><strong>IIT JAM</strong><small>Entrance preparation</small></button>
+  <button class="class-card" type="button" data-course="ISI"><strong>ISI</strong><small>Entrance preparation</small></button>
+  <button class="class-card" type="button" data-course="TIFR CAM"><strong>TIFR CAM</strong><small>Entrance preparation</small></button>
  </div>
 </section>
+<nav class="content-tabs" aria-label="Content type">
+ <button type="button" class="content-tab active" data-panel="notes">📚 Study Notes</button>
+ <button type="button" class="content-tab" data-panel="papers">📝 Question Papers</button>
+ <button type="button" class="content-tab" data-panel="student-editor">✎ Student Editor</button>
+</nav>
 <section class="section" id="notes">
  <div class="section-head"><h2>📚 Study Notes</h2><a class="text-link" href="#content-browser">Browse notes →</a></div>
  <p class="muted">Browse live published notes from the MathsLearn D1 database. Filters apply to the live catalogue.</p>
@@ -59,7 +59,7 @@
  </div>
  <div id="papersList" class="content-grid"><article class="content-card"><span class="pill orange">Example layout</span><div class="formula">x = (−b ± √D) / 2a</div><strong>Quadratic Equations — Practice Paper</strong><p class="muted">Sample card for layout preview. Replace with verified papers before launch.</p></article></div>
 </section>
-<section class="section" id="content-browser"><div class="section-head"><h2>🔎 Find content</h2></div><p class="muted">Search published notes and question papers from the live catalogue.</p><button class="btn-primary" id="searchButton">Search content</button><div id="searchMessage" class="muted" aria-live="polite"></div></section>
+
 <section class="section" id="student-editor">
  <div class="section-head"><h2>✎ Student Maths Editor</h2><span class="muted">Simple editor for students</span></div>
  <div class="toolbar"><button data-cmd="bold"><b>B</b></button><button data-cmd="italic"><i>I</i></button><button data-cmd="underline"><u>U</u></button><button data-cmd="insertUnorderedList">• List</button><button data-cmd="formatBlock" data-val="h2">Heading</button></div>
