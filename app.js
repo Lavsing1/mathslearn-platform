@@ -171,7 +171,7 @@ function card(x) {
   return '<article class="content-card">'+thumb+'<span class="pill '+(type==='Question Paper'?'orange':'')+'">'+safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)+'</span><div class="formula">'+safe(chapter||subject)+'</div><strong>'+safe(x.title)+'</strong><p class="muted">'+safe(x.study_level||x.level)+' · '+safe(x.course)+(x.board_exam||x.board?' · '+safe(x.board_exam||x.board):'')+' · '+safe(subject)+(chapter?' · '+safe(chapter):'')+'</p><p class="muted">'+safe(autoExcerpt(x))+'</p><button class="btn-secondary" data-open-content="'+safe(x.id)+'">Read full content →</button></article>';
 }
 function filterRender() {
-  const q=lower('searchInput'), noteLevel=lower('noteLevel'),noteCourse=lower('noteCourse'),noteBoard=lower('noteBoard'),noteSubject=lower('noteSubject'),noteTopic=lower('noteTopic'),paperLevel=lower('paperLevel'),paperCourse=lower('paperCourse'),paperBoard=lower('paperBoard'),paperSubject=lower('paperSubject'),paperTopic=lower('paperTopic'),paperType=lower('paperType');
+  const q='', noteLevel='',noteCourse=lower('selectedCourse'),noteBoard=lower('globalBoard'),noteSubject='',noteTopic='',paperLevel='',paperCourse=lower('selectedCourse'),paperBoard=lower('globalBoard'),paperSubject='',paperTopic='',paperType='';
   const searchMatch=x=>!q||[x.title,x.study_level,x.level,x.course,x.board_exam,x.board,x.topic,x.subject,x.chapter,x.excerpt,x.seo_description,x.seo].join(' ').toLowerCase().includes(q);
   const notes=contentCache.filter(x=>(x.content_type||x.type)!=='Question Paper'&&(!noteLevel||(x.study_level||x.level).toLowerCase()===noteLevel)&&(!noteCourse||x.course.toLowerCase()===noteCourse)&&(!noteBoard||(x.board_exam||x.board||'').toLowerCase()===noteBoard)&&(!noteSubject||(x.subject||'mathematics').toLowerCase().includes(noteSubject))&&(!noteTopic||(x.chapter||x.topic||'').toLowerCase().includes(noteTopic))&&searchMatch(x));
   const papers=contentCache.filter(x=>(x.content_type||x.type)==='Question Paper'&&(!paperLevel||(x.study_level||x.level).toLowerCase()===paperLevel)&&(!paperCourse||x.course.toLowerCase()===paperCourse)&&(!paperBoard||(x.board_exam||x.board||'').toLowerCase()===paperBoard)&&(!paperSubject||(x.subject||'mathematics').toLowerCase().includes(paperSubject))&&(!paperTopic||(x.chapter||x.topic||'').toLowerCase().includes(paperTopic))&&(!paperType||(x.paper_type||x.paperType||'').toLowerCase()===paperType)&&searchMatch(x));
@@ -203,7 +203,7 @@ $('readerFullscreen')?.addEventListener('click',async()=>{const target=$('conten
 document.addEventListener('fullscreenchange',()=>{const b=$('readerFullscreen');if(b)b.textContent=document.fullscreenElement?'⤢ Exit fullscreen':'⛶ Fullscreen reading';});
 $('contentModal')?.addEventListener('click',e=>{if(e.target===$('contentModal'))closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-['searchInput','noteLevel','noteCourse','noteBoard','noteSubject','noteTopic','paperLevel','paperCourse','paperBoard','paperSubject','paperTopic','paperType'].forEach(id=>$(id)?.addEventListener('input',filterRender));
+['globalBoard'].forEach(id=>$(id)?.addEventListener('change',filterRender));
 $('searchButton')?.addEventListener('click',()=>{filterRender();const q=value('searchInput')||value('noteTopic');$('searchMessage').textContent=q?`Showing published content matching “${q}”.`:'Showing all published content.';});
 $('searchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){$('searchButton').click();$('content-browser').scrollIntoView({behavior:'smooth'});}});
 
@@ -318,12 +318,13 @@ $('downloadPdf')?.addEventListener('click', async () => {
 
 // Class-first homepage navigation: keep the catalogue filtered by the selected class and show one workspace at a time.
 function setupClassFirstHome(){
+ const courseState=document.createElement('input');courseState.type='hidden';courseState.id='selectedCourse';document.body.appendChild(courseState);
  const cards=[...document.querySelectorAll('.class-card')];
  const tabs=[...document.querySelectorAll('.content-tab')];
  const panels={notes:$('notes'),papers:$('papers'),'student-editor':$('student-editor')};
  function chooseCourse(course){
   cards.forEach(card=>card.classList.toggle('active',card.dataset.course===course));
-  $('noteCourse').value=course;$('paperCourse').value=course;
+  $('selectedCourse').value=course;
   filterRender();
  }
  function choosePanel(name){
@@ -332,6 +333,7 @@ function setupClassFirstHome(){
  }
  cards.forEach(card=>card.addEventListener('click',()=>chooseCourse(card.dataset.course||'')));
  tabs.forEach(tab=>tab.addEventListener('click',()=>choosePanel(tab.dataset.panel)));
+ $('globalBoard')?.addEventListener('change',filterRender);
  chooseCourse('');choosePanel('notes');
 }
 document.addEventListener('DOMContentLoaded',setupClassFirstHome);
