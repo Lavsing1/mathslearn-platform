@@ -68,3 +68,16 @@
  .global-type-label,.global-board-label{font-size:11px;gap:4px}
  .global-type-label select,.global-board-label select{min-width:0;max-width:145px;padding:6px;font-size:11px}
 }
+
+/* Click-anywhere cards, subtle multicolour glow, and mobile-only class dropdown */
+.home-dashboard .content-card{position:relative;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;box-shadow:0 3px 12px rgba(25,105,210,.07),inset 0 1px 0 rgba(255,255,255,.9);background:linear-gradient(145deg,#fff 0%,#f5faff 58%,#faf5ff 100%);border-color:#dce8fa}
+.home-dashboard .content-card:nth-child(4n+1){box-shadow:0 4px 14px rgba(0,132,255,.11),inset 0 0 0 1px rgba(0,132,255,.035)}
+.home-dashboard .content-card:nth-child(4n+2){background:linear-gradient(145deg,#fff 0%,#fff8f2 100%);box-shadow:0 4px 14px rgba(255,148,45,.10)}
+.home-dashboard .content-card:nth-child(4n+3){background:linear-gradient(145deg,#fff 0%,#f0fffb 100%);box-shadow:0 4px 14px rgba(0,190,155,.10)}
+.home-dashboard .content-card:nth-child(4n){background:linear-gradient(145deg,#fff 0%,#f7f2ff 100%);box-shadow:0 4px 14px rgba(135,76,255,.10)}
+.home-dashboard .content-card:hover,.home-dashboard .content-card:focus-visible{transform:translateY(-2px);border-color:#8dbbff;box-shadow:0 8px 22px rgba(0,119,255,.16),0 0 0 1px rgba(105,160,255,.12);outline:none}
+.home-dashboard .content-card:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,rgba(0,150,255,.035),transparent 38%,rgba(154,80,255,.035))}
+.home-dashboard .content-card .formula{overflow-wrap:anywhere}
+.mobile-class-select{display:none}
+.content-modal-card.reader-fullscreen-fallback{position:fixed;inset:0;z-index:1001;width:100vw;height:100dvh;max-width:none;max-height:none;border-radius:0;overflow:auto}
+@media(max-width:560px){.mobile-class-select{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:750;margin-top:10px}.mobile-class-select select{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}.class-grid{display:none!important}.home-dashboard .content-card{box-shadow:0 3px 10px rgba(30,100,190,.09)}}
