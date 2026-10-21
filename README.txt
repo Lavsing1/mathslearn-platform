@@ -1,1 +1,23 @@
-MathsLearn patch files\n\n1) Upload books/reader.js to the repo at books/reader.js.\n2) In books/index.html, replace the existing inline reader <script> block (the one beginning const app=document.getElementById('app')) with <script src="./reader.js"></script>. Keep the existing KaTeX script and CSS.\n3) Add these CSS rules to the existing style block in books/index.html:\n.readerTools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:22px}\n.reader:fullscreen{overflow:auto;max-width:none;margin:0;border:0;border-radius:0;padding:clamp(18px,5vw,72px);background:#fff}\n.toc{background:#f1f5f9;border-radius:12px;padding:16px 24px;margin:14px 0 24px}\n.toc ol{margin-bottom:0}.toc a{color:#1d4ed8}\n4) Upload admin/studio/manage-books.html and admin/studio/manage-books.js. Then visit /admin/studio/manage-books.html while signed in.\n5) Commit the changes and wait for Cloudflare Production deployment success.\n\nThe existing API delete endpoint is used. This patch does not modify or reset D1. Full-page and Contents appear on an individual book page.
+MathsLearn Editor Workspace Upgrade
+==================================
+
+This add-on adds a Full screen / Exit full screen control to the Lecture Studio editor, improves responsive workspace layout, and keeps live preview visible instead of hiding it on smaller desktop screens.
+
+Files:
+- admin/studio/css/workspace-upgrade.css
+- admin/studio/js/11-workspace-upgrade.js
+
+Install in GitHub:
+1. Upload both files to the exact paths shown above.
+2. Open admin/studio/index.html and add this line AFTER the existing `<link rel="stylesheet" href="css/home.css">`:
+   `<link rel="stylesheet" href="css/workspace-upgrade.css">`
+3. In admin/studio/index.html, add this script line AFTER `<script src="js/10-mathslearn.js"></script>` and before `</body>`:
+   `<script src="js/11-workspace-upgrade.js"></script>`
+4. Commit to main and wait for Cloudflare Pages Production deployment to succeed.
+5. Open `/admin/studio/index.html`, log in, open a lecture, and click **Full screen**.
+
+Notes:
+- The editor already has live preview and multiple colour/format buttons. This add-on does not replace the editor or change the database.
+- Fullscreen browser permission can be denied by the browser; in that case it still uses the full viewport.
+- On narrow screens the panels stack vertically to keep controls usable; on wide screens editor and preview sit side by side.
+- These files have not been deployed to your live site yet.
