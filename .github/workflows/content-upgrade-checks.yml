@@ -1,0 +1,41 @@
+name: Content upgrade checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/content-reader-upgrades]
+
+jobs:
+  syntax-and-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -type f -name '*.js' -not -path './node_modules/*' -print0 | while IFS= read -r -d '' file; do
+            echo "Checking $file"
+            node --check "$file"
+          done
+      - name: Validate D1 migration against base schema
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          from pathlib import Path
+          db = sqlite3.connect(':memory:')
+          db.executescript(Path('migrations/0001_initial.sql').read_text())
+          db.executescript(Path('migrations/0003_content_cards.sql').read_text())
+          columns = {row[1] for row in db.execute('PRAGMA table_info(content)')}
+          required = {'subject', 'chapter', 'excerpt', 'thumbnail_url'}
+          missing = required - columns
+          assert not missing, f'Missing content columns: {sorted(missing)}'
+          print('Base schema + content-card migration: PASS')
+          print('Columns present:', ', '.join(sorted(required)))
+          PY
