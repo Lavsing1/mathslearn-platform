@@ -177,6 +177,12 @@ function filterRender() {
   const papers=contentCache.filter(x=>(x.content_type||x.type)==='Question Paper'&&(!paperLevel||(x.study_level||x.level).toLowerCase()===paperLevel)&&(!paperCourse||x.course.toLowerCase()===paperCourse)&&(!paperBoard||(x.board_exam||x.board||'').toLowerCase()===paperBoard)&&(!paperSubject||(x.subject||'mathematics').toLowerCase().includes(paperSubject))&&(!paperTopic||(x.chapter||x.topic||'').toLowerCase().includes(paperTopic))&&(!paperType||(x.paper_type||x.paperType||'').toLowerCase()===paperType)&&searchMatch(x));
   $('notesList').innerHTML=notes.length?notes.map(card).join(''):'<p class="muted">No published notes match these filters yet.</p>';
   $('papersList').innerHTML=papers.length?papers.map(card).join(''):'<p class="muted">No published question papers match these filters yet.</p>';
+  // Render LaTeX in catalogue cards as well as in the full reader.
+  if (window.renderMathInElement) {
+    const mathOptions = {delimiters:[{left:'$',right:'$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}], throwOnError:false};
+    window.renderMathInElement($('notesList'), mathOptions);
+    window.renderMathInElement($('papersList'), mathOptions);
+  }
   document.querySelectorAll('[data-open-content]').forEach(btn=>btn.addEventListener('click',()=>openContent(btn.dataset.openContent)));
 }
 async function loadPublicContent() {
