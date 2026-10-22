@@ -21,8 +21,13 @@ export async function onRequestGet({ request, env }) {
     binds.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
   }
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  const result = await env.DB.prepare(`SELECT id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,created_at,updated_at FROM content ${where} ORDER BY updated_at DESC LIMIT 200`).bind(...binds).all();
-  return json({ items: result.results || [] });
+  try {
+    const result = await env.DB.prepare(`SELECT id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,created_at,updated_at FROM content ${where} ORDER BY updated_at DESC LIMIT 200`).bind(...binds).all();
+    return json({ items: result.results || [] });
+  } catch (error) {
+    console.error("Content list query failed:", error);
+    return json({ error: admin ? `Content database query failed: ${String(error?.message || error).slice(0, 240)}` : "Unable to load content right now." }, 500);
+  }
 }
 export async function onRequestPost({ request, env }) {
   if (!sameOrigin(request)) return json({ error: "Invalid request origin." }, 403);
@@ -35,9 +40,14 @@ export async function onRequestPost({ request, env }) {
   if (item.error) return json({ error: item.error }, 400);
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
-  await env.DB.prepare(`INSERT INTO content (id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-    .bind(id,item.title,item.content_type,item.paper_type,item.study_level,item.course,item.board_exam,item.topic,item.subject,item.chapter,item.excerpt,item.thumbnail_url,item.seo_description,item.body_html,item.status,now,now).run();
-  return json({ item: { id, ...item, created_at: now, updated_at: now } }, 201);
+  try {
+    await env.DB.prepare(`INSERT INTO content (id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .bind(id,item.title,item.content_type,item.paper_type,item.study_level,item.course,item.board_exam,item.topic,item.subject,item.chapter,item.excerpt,item.thumbnail_url,item.seo_description,item.body_html,item.status,now,now).run();
+    return json({ item: { id, ...item, created_at: now, updated_at: now } }, 201);
+  } catch (error) {
+    console.error("Content insert failed:", error);
+    return json({ error: `Content database write failed: ${String(error?.message || error).slice(0, 240)}` }, 500);
+  }
 }
 function validate(data) {
   const title = cleanText(data.title, 180);
