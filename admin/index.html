@@ -46,6 +46,28 @@
 @media(max-width:900px){#pane-manage .admin-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:560px){#workspace .admin-columns>.admin-nav{justify-content:flex-start!important}#pane-manage .admin-list{grid-template-columns:1fr!important}}
 
+
+/* Fix editor paragraph spacing without changing the overall studio layout. */
+#editor.math-editor,
+#livePreview.live-preview {
+  line-height: 1.55;
+}
+#editor.math-editor p,
+#editor.math-editor div,
+#livePreview.live-preview p,
+#livePreview.live-preview div {
+  margin-block: 0 0.45em;
+}
+#livePreview.live-preview > :first-child {
+  margin-top: 0;
+}
+#livePreview.live-preview > :last-child {
+  margin-bottom: 0;
+}
+#livePreview .katex-display {
+  margin: 0.55em 0;
+}
+
 </style>
 </head>
 <body>
