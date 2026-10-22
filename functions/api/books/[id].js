@@ -10,6 +10,10 @@ export async function onRequestPut({request,env,params}) {
   const old=await env.DB.prepare("SELECT * FROM books WHERE id=?").bind(id).first();
   if(!old)return json({error:"Book not found."},404);
   if(x.status && ["draft","published","hidden"].includes(x.status) && !x.book){
+    if(x.status==="published"){
+      const existingLectures=JSON.parse(old.lectures_json);
+      if(!Array.isArray(existingLectures)||!existingLectures.some(l=>Array.isArray(l.steps)&&l.steps.length))return json({error:"Add chapter content before publishing."},400);
+    }
     const now=new Date().toISOString();
     await env.DB.prepare("UPDATE books SET status=?,updated_at=? WHERE id=?").bind(x.status,now,id).run();
     return json({book:{id,status:x.status,updated_at:now}});
