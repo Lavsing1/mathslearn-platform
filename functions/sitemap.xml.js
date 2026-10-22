@@ -16,7 +16,7 @@ export async function onRequestGet({ env }) {
   for (const book of books.results || []) {
     const slug = book.slug || slugify(book.title) + "-" + String(book.id).slice(0,8);
     const path = book.url_path || "books/" + slug;
-    const url = BASE + "/" + path.replace(/^\\/+|\\/+$/g,"") + "/";
+    const url = BASE + "/" + path.replace(/^\/+|\/+$/g,"") + "/";
     entries.set(url, String(book.updated_at || "").slice(0,10) || new Date().toISOString().slice(0,10));
   }
   const body = '<?xml version="1.0" encoding="UTF-8"?>\n' +
