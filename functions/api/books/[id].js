@@ -1,6 +1,6 @@
 import { json, getAdmin, sameOrigin } from "../../_utils.js";
 const MAX_BODY=2_500_000;
-async function body(request){const t=await request.text();if(t.length>MAX_BODY)throw new Error("Too large");return JSON.parse(t);}
+async function body(request){const t=await request.text();if(new TextEncoder().encode(t).byteLength>MAX_BODY)throw new Error("Too large");return JSON.parse(t);}
 export async function onRequestPut({request,env,params}) {
   if(!sameOrigin(request))return json({error:"Invalid request origin."},403);
   if(!(await getAdmin(request,env)))return json({error:"Admin login required."},401);
