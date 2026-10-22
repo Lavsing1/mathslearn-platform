@@ -21,8 +21,10 @@ export async function onRequestPut({request,env,params}) {
   const b=x.book;if(!b||!String(b.title||"").trim())return json({error:"Book title is required."},400);
   const book={title:String(b.title).slice(0,220),subtitle:String(b.subtitle||"").slice(0,500),author:String(b.author||"").slice(0,180),org:String(b.org||"").slice(0,180),size:b.size==="a5"?"a5":"a4",order:Array.isArray(b.order)?b.order.map(String).slice(0,300):[]};
   const lectures=Array.isArray(x.lectures)?x.lectures.slice(0,300):JSON.parse(old.lectures_json);
-  const serialized=JSON.stringify({book,lectures});if(serialized.length>MAX_BODY)return json({error:"Book data is too large. Export a backup and reduce image sizes."},413);
+  if(!lectures.length)return json({error:"Add at least one chapter before saving."},400);
+  const serialized=JSON.stringify({book,lectures});if(new TextEncoder().encode(serialized).byteLength>MAX_BODY)return json({error:"Book data is too large. Export a backup and reduce image sizes."},413);
   const status=["draft","published","hidden"].includes(x.status)?x.status:old.status;
+  if(status==="published"&&!lectures.some(l=>Array.isArray(l.steps)&&l.steps.length))return json({error:"Add chapter content before publishing."},400);
   const now=new Date().toISOString();
   await env.DB.prepare("UPDATE books SET title=?,subtitle=?,author=?,org=?,page_size=?,book_json=?,lectures_json=?,status=?,updated_at=? WHERE id=?")
     .bind(book.title,book.subtitle,book.author,book.org,book.size,JSON.stringify(book),JSON.stringify(lectures),status,now,id).run();
