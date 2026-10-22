@@ -19,6 +19,10 @@
 </header>
 <main class="wrap">
 <main class="wrap home-dashboard">
+<section class="mobile-hero" aria-label="MathsLearn introduction">
+ <div class="mobile-hero-copy"><span class="hero-kicker">EXPLORE · PRACTISE · MASTER</span><h1>Learn <span>Mathematics</span> Your Way</h1><p>Notes · Papers · Practice · Tools</p></div>
+ <div class="mobile-hero-art" aria-hidden="true"><span class="hero-pi">π</span><span class="hero-root">√x</span><span class="hero-cube">◇</span><div class="hero-book"><i></i><i></i></div><span class="hero-triangle">△</span></div>
+</section>
 <section class="class-picker section" id="home">
  <div class="section-head"><h2>Choose Class / Exam</h2><span class="muted">Select a class to view its notes, papers and tools</span></div>
  <div class="class-grid" role="group" aria-label="Choose class or exam">
@@ -79,4 +83,11 @@
 <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin="anonymous"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
 <script defer src="./app.js"></script>
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+ <a class="active" href="#home" data-mobile-nav="home"><span>⌂</span><small>Home</small></a>
+ <a href="#notes" data-mobile-nav="notes"><span>▤</span><small>Notes</small></a>
+ <a href="#papers" data-mobile-nav="papers"><span>▧</span><small>Papers</small></a>
+ <a href="#student-editor" data-mobile-nav="student-editor"><span>✎</span><small>Editor</small></a>
+ <a href="#home" data-mobile-nav="more"><span>☰</span><small>More</small></a>
+</nav>
 </body></html>
