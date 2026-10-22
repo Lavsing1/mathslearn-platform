@@ -51,5 +51,12 @@ jobs:
               )
           assert db.execute('SELECT COUNT(*) FROM content').fetchone()[0] == len(supported)
           assert db.execute("SELECT COUNT(*) FROM books").fetchone()[0] == 0
-          print('All migrations + all Admin Studio content types: PASS')
+
+          # Keep both API validators aligned with the content types offered by Admin Studio.
+          expected_types = sorted(supported)
+          for api_file in (Path('functions/api/content/index.js'), Path('functions/api/content/[id].js')):
+              source = api_file.read_text()
+              missing_api_types = [name for name in expected_types if f'"{name}"' not in source]
+              assert not missing_api_types, f'{api_file} is missing supported types: {missing_api_types}'
+          print('All migrations + Admin Studio content types + API validation: PASS')
           PY
