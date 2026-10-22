@@ -12,10 +12,11 @@
 </head>
 <body>
 <header class="topbar">
+  <button class="mobile-menu-btn" type="button" aria-label="Go to home" onclick="document.getElementById('home').scrollIntoView({behavior:'smooth'})">☰</button>
   <a class="brand" href="#home" aria-label="MathsLearn home"><div class="logo">△</div><div><div class="brand-name">Maths<span>Learn</span></div><div class="tagline">Explore · Practise · Master</div></div></a>
   <nav class="nav"><a class="active" href="#home">Home</a><a href="#notes">Notes</a><a href="#papers">Question Papers</a><a href="#student-editor">Student Editor</a></nav>
   <label class="search">⌕ <input id="searchInput" placeholder="Search notes, topics, papers..." aria-label="Search"></label>
-  <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☼</button>
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☼</button><a class="mobile-profile-btn" href="./admin/" aria-label="Admin profile">●</a>
 </header>
 <main class="wrap home-dashboard">
 <section class="mobile-hero" aria-label="MathsLearn introduction">
