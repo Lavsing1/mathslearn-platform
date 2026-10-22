@@ -2,7 +2,7 @@ import { json, getAdmin, sameOrigin } from "../../_utils.js";
 const MAX_BODY = 2_500_000;
 async function body(request) {
   const text = await request.text();
-  if (text.length > MAX_BODY) throw new Error("Book data is too large (maximum 2.5 MB). Export a backup and reduce image sizes.");
+  if (new TextEncoder().encode(text).byteLength > MAX_BODY) throw new Error("Book data is too large (maximum 2.5 MB). Export a backup and reduce image sizes.");
   return JSON.parse(text);
 }
 function validStatus(s) { return ["draft","published","hidden"].includes(s) ? s : "draft"; }

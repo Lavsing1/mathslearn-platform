@@ -62,5 +62,11 @@ jobs:
           assert '<option value="Question Paper">' in homepage, 'Homepage content filter is missing Question Paper'
           app_source = Path('app.js').read_text()
           assert "(!contentType||contentType==='question paper')" in app_source, 'Global content type filter is not applied to question papers'
-          print('All migrations + Admin Studio content types + API validation + homepage filters: PASS')
+          book_create_api = Path('functions/api/books/index.js').read_text()
+          book_update_api = Path('functions/api/books/[id].js').read_text()
+          assert 'new TextEncoder().encode(text).byteLength > MAX_BODY' in book_create_api, 'Book create API must enforce byte-based request limits'
+          assert 'new TextEncoder().encode(t).byteLength>MAX_BODY' in book_update_api, 'Book update API must enforce byte-based request limits'
+          assert 'status==="published"&&!lectures.some' in book_update_api, 'Book updates must validate content before publishing'
+          assert 'existingLectures.some' in book_update_api, 'Status-only publish must validate saved chapter content'
+          print('Migrations + content types + homepage filters + book publishing safeguards: PASS')
           PY
