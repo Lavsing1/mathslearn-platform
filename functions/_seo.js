@@ -75,7 +75,11 @@ export async function onRequestContentPage({ request, env, params }, prefix) {
   const pathPart = String(params?.path || "").replace(/^\/+|\/+$/g, "");
   if (!pathPart || pathPart.includes("..")) return new Response("Not found", {status:404});
   const path = prefix + "/" + pathPart;
-  const item = await env.DB.prepare("SELECT id,title,content_type,course,subject,chapter,topic,excerpt,seo_description,body_html,status,url_path FROM content WHERE url_path=? AND status='published' LIMIT 1").bind(path).first();
+  let item = await env.DB.prepare("SELECT id,title,content_type,course,subject,chapter,topic,excerpt,seo_description,body_html,status,url_path,slug FROM content WHERE url_path=? AND status='published' LIMIT 1").bind(path).first();
+  if (!item) {
+    const legacy = await env.DB.prepare("SELECT id,title,content_type,course,subject,chapter,topic,excerpt,seo_description,body_html,status,url_path,slug FROM content WHERE status='published' AND (url_path='' OR url_path IS NULL)").all();
+    item = (legacy.results || []).find(row => buildContentUrlPath(row, slugify(row.title) + "-" + String(row.id).slice(0, 8)) === path) || null;
+  }
   if (!item) return new Response("Not found", {status:404, headers:{"content-type":"text/plain; charset=utf-8","X-Robots-Tag":"noindex"}});
   return new Response(renderContentPage(item, path), {status:200,headers:{"content-type":"text/html; charset=utf-8","cache-control":"public, max-age=300","X-Content-Type-Options":"nosniff"}});
 }
