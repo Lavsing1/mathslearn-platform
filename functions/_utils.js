@@ -84,7 +84,11 @@ export function sanitizeHtml(input) {
 }
 export function cleanText(value, max = 300) { return String(value ?? "").trim().slice(0, max); }
 export async function readJson(request) {
-  const length = Number(request.headers.get("Content-Length") || 0);
-  if (length > 350000) throw new Error("Request body too large.");
-  return await request.json();
+  // Content-Length may be absent for streamed/chunked requests, so enforce the
+  // limit against the actual body instead of trusting the header alone.
+  const text = await request.text();
+  if (new TextEncoder().encode(text).byteLength > 350000) {
+    throw new Error("Request body too large.");
+  }
+  return JSON.parse(text);
 }
