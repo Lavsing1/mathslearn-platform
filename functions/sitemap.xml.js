@@ -3,7 +3,7 @@ const BASE = "https://mathslearn.online";
 function xmlEscape(value) { return String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;"); }
 export async function onRequestGet({ env }) {
   if (!env.DB) return new Response("Sitemap temporarily unavailable", {status:503});
-  const rows = await env.DB.prepare("SELECT id,title,content_type,course,topic,chapter,slug,url_path,updated_at FROM content WHERE status='published'").all();
+  const rows = await env.DB.prepare("SELECT id,title,content_type,course,board_exam,subject,topic,chapter,slug,url_path,updated_at FROM content WHERE status='published'").all();
   const entries = new Map();
   entries.set(BASE + "/", new Date().toISOString().slice(0,10));
   for (const item of rows.results || []) {
