@@ -11,8 +11,12 @@ export async function onRequestPut({ request, env, params }) {
   const item = validate(data); if (item.error) return json({ error: item.error }, 400);
   const current = await env.DB.prepare("SELECT id,slug,url_path FROM content WHERE id=?").bind(params.id).first();
   if (!current) return json({ error: "Content item not found." }, 404);
-  const slug = slugify(item.slug || current.slug || item.title);
-  const url_path = buildContentUrlPath(item, slug);
+  const requestedSlug = slugify(item.slug || current.slug || item.title);
+  if (current.url_path && current.slug && requestedSlug !== current.slug) {
+    return json({ error: "This URL is already permanent. Keep the existing slug to protect search indexing; create a new content item if you need a different URL." }, 400);
+  }
+  const slug = current.slug || requestedSlug;
+  const url_path = current.url_path || buildContentUrlPath(item, slug);
   const duplicate = await env.DB.prepare("SELECT id,title FROM content WHERE url_path=? AND id<>? LIMIT 1").bind(url_path, params.id).first();
   if (duplicate) return json({ error: `Duplicate URL: /${url_path}/ already belongs to “${duplicate.title}”. Change the URL slug before saving.`, code: "DUPLICATE_URL", url_path }, 409);
   const now = new Date().toISOString();
