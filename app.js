@@ -324,7 +324,7 @@ $('downloadPdf')?.addEventListener('click', async () => {
 // Class-first homepage navigation: keep the catalogue filtered by the selected class and show one workspace at a time.
 function setupClassFirstHome(){
  const courseState=document.createElement('input');courseState.type='hidden';courseState.id='selectedCourse';document.body.appendChild(courseState);
- const cards=[...document.querySelectorAll('.class-card')];
+ const cards=[...document.querySelectorAll('.class-card,.explore-level')];
  const tabs=[...document.querySelectorAll('.content-tab')];
  const panels={notes:$('notes'),papers:$('papers'),'student-editor':$('student-editor')};
  function chooseCourse(course){
