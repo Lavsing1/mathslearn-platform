@@ -1,5 +1,5 @@
 import { json, getAdmin, sameOrigin, readJson, cleanText, sanitizeHtml } from "../../_utils.js";
-const TYPES = new Set(["Study Notes", "Question Paper", "Solved Examples", "Formula Sheet"]);
+const TYPES = new Set(["Study Notes", "Question Paper", "Solved Examples", "Formula Sheet", "Solved Paper", "Unsolved Questions", "Important Questions"]);
 const LEVELS = new Set(["School Mathematics", "Higher Secondary", "Undergraduate", "Entrance Preparation"]);
 export async function onRequestPut({ request, env, params }) {
   if (!sameOrigin(request)) return json({ error: "Invalid request origin." }, 403);
