@@ -11,7 +11,7 @@
 
   const bar=document.createElement('div');
   bar.id='mlAdminBar';
-  bar.innerHTML='<span class="mlbrand">MathsLearn · Book Studio</span><button id="mlInsertImage">Insert image</button><button id="mlSaveBook" class="primary">Save draft to cloud</button><button id="mlPublishBook">Publish / Update</button><button id="mlHideBook">Hide / Unhide</button><button id="mlDeleteBook" class="danger">Delete cloud copy</button><button id="mlExportBook">Export backup</button><span id="mlAdminMsg">Checking admin session…</span>';
+  bar.innerHTML='<span class="mlbrand">MathsLearn · Book Studio</span><a href="/admin/studio/manage-books.html" style="display:inline-block;border:1px solid #5c7195;background:#263d64;color:#fff;border-radius:8px;padding:8px 10px;text-decoration:none;font-weight:700">🗂️ Manage Books Library</a><button id="mlInsertImage">Insert image</button><button id="mlSaveBook" class="primary">Save draft to cloud</button><button id="mlPublishBook">Publish / Update</button><button id="mlHideBook">Hide / Unhide</button><button id="mlDeleteBook" class="danger">Delete cloud copy</button><button id="mlExportBook">Export backup</button><span id="mlAdminMsg">Checking admin session…</span>';
   document.body.prepend(bar);
   const dlg=$ml('#mlImageDialog');
   const currentBook=()=> (typeof BK!=='undefined'&&typeof BKC!=='undefined'&&BKC&&BK[BKC])?BK[BKC]:null;
