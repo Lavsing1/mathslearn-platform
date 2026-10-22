@@ -1,4 +1,5 @@
 import { json, getAdmin, sameOrigin, readJson, cleanText, sanitizeHtml } from "../../_utils.js";
+import { buildContentUrlPath, slugify } from "../../_seo.js";
 const TYPES = new Set(["Study Notes", "Question Paper", "Solved Examples", "Formula Sheet", "Solved Paper", "Unsolved Questions", "Important Questions"]);
 const LEVELS = new Set(["School Mathematics", "Higher Secondary", "Undergraduate", "Entrance Preparation"]);
 
@@ -21,24 +22,39 @@ export async function onRequestGet({ request, env }) {
     binds.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
   }
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
-  const result = await env.DB.prepare(`SELECT id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,created_at,updated_at FROM content ${where} ORDER BY updated_at DESC LIMIT 200`).bind(...binds).all();
-  return json({ items: result.results || [] });
+  const result = await env.DB.prepare(`SELECT id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,slug,url_path,created_at,updated_at FROM content ${where} ORDER BY updated_at DESC LIMIT 200`).bind(...binds).all();
+  const items = (result.results || []).map(item => ({
+    ...item,
+    slug: item.slug || (item.url_path ? item.url_path.split("/").pop() : slugify(item.title) + "-" + String(item.id).slice(0, 8)),
+    url_path: item.url_path || buildContentUrlPath(item, (item.slug || slugify(item.title) + "-" + String(item.id).slice(0, 8)))
+  }));
+  return json({ items });
 }
+
 export async function onRequestPost({ request, env }) {
   if (!sameOrigin(request)) return json({ error: "Invalid request origin." }, 403);
-  const admin = await getAdmin(request, env);
-  if (!admin) return json({ error: "Admin login required." }, 401);
+  if (!await getAdmin(request, env)) return json({ error: "Admin login required." }, 401);
   if (!env.DB) return json({ error: "D1 binding DB is missing." }, 503);
   let data;
   try { data = await readJson(request); } catch { return json({ error: "Invalid or oversized request body." }, 400); }
   const item = validate(data);
   if (item.error) return json({ error: item.error }, 400);
-  const now = new Date().toISOString();
   const id = crypto.randomUUID();
-  await env.DB.prepare(`INSERT INTO content (id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-    .bind(id,item.title,item.content_type,item.paper_type,item.study_level,item.course,item.board_exam,item.topic,item.subject,item.chapter,item.excerpt,item.thumbnail_url,item.seo_description,item.body_html,item.status,now,now).run();
-  return json({ item: { id, ...item, created_at: now, updated_at: now } }, 201);
+  const slug = slugify(item.slug || item.title);
+  const url_path = buildContentUrlPath(item, slug);
+  const duplicate = await env.DB.prepare("SELECT id,title FROM content WHERE url_path=? LIMIT 1").bind(url_path).first();
+  if (duplicate) return json({ error: `Duplicate URL: /${url_path}/ already belongs to “${duplicate.title}”. Change the URL slug or title before saving.`, code: "DUPLICATE_URL", url_path }, 409);
+  const now = new Date().toISOString();
+  try {
+    await env.DB.prepare(`INSERT INTO content (id,title,content_type,paper_type,study_level,course,board_exam,topic,subject,chapter,excerpt,thumbnail_url,seo_description,body_html,status,slug,url_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+      .bind(id,item.title,item.content_type,item.paper_type,item.study_level,item.course,item.board_exam,item.topic,item.subject,item.chapter,item.excerpt,item.thumbnail_url,item.seo_description,item.body_html,item.status,slug,url_path,now,now).run();
+  } catch (error) {
+    if (/unique|constraint/i.test(String(error?.message || error))) return json({ error: "This URL already exists. Choose a different URL slug.", code: "DUPLICATE_URL", url_path }, 409);
+    throw error;
+  }
+  return json({ item: { id, ...item, slug, url_path, created_at: now, updated_at: now } }, 201);
 }
+
 function validate(data) {
   const title = cleanText(data.title, 180);
   const content_type = cleanText(data.content_type || data.type, 40);
@@ -52,6 +68,7 @@ function validate(data) {
   const chapter = cleanText(data.chapter || data.topic, 160);
   const excerpt = cleanText(data.excerpt || data.seo_description || data.seo, 360);
   const thumbnail_url = cleanText(data.thumbnail_url, 1000);
+  const slug = cleanText(data.slug, 100);
   const body_html = sanitizeHtml(data.body_html || data.body || "");
   const status = data.status === "published" ? "published" : "draft";
   if (!title) return { error: "Title is required." };
@@ -62,6 +79,6 @@ function validate(data) {
   if (thumbnail_url && !thumbnail_url.toLowerCase().startsWith("https://")) return { error: "Thumbnail URL must start with https://." };
   if (body_html.length > 300000) return { error: "Content is too large." };
   if (status === "published" && !body_html.trim()) return { error: "Add content before publishing." };
-  return { title, content_type, paper_type:content_type === "Question Paper" ? paper_type : "", study_level, course, board_exam, topic, subject, chapter, excerpt, thumbnail_url, seo_description, body_html, status };
+  return { title, content_type, paper_type:content_type === "Question Paper" ? paper_type : "", study_level, course, board_exam, topic, subject, chapter, excerpt, thumbnail_url, seo_description, body_html, status, slug };
 }
 export { validate };
