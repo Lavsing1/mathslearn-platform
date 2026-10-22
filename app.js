@@ -171,10 +171,10 @@ function card(x) {
   return '<article class="content-card" role="button" tabindex="0" aria-label="Open '+safe(x.title)+'" data-card-open="'+safe(x.id)+'">'+thumb+'<span class="pill '+(type==='Question Paper'?'orange':'')+'">'+safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)+'</span><div class="formula">'+safe(chapter||subject)+'</div><strong>'+safe(x.title)+'</strong><p class="muted">'+safe(x.study_level||x.level)+' · '+safe(x.course)+(x.board_exam||x.board?' · '+safe(x.board_exam||x.board):'')+' · '+safe(subject)+(chapter?' · '+safe(chapter):'')+'</p><p class="muted">'+safe(autoExcerpt(x))+'</p></article>';
 }
 function filterRender() {
-  const q='', noteLevel='',noteCourse=lower('selectedCourse'),noteBoard=lower('globalBoard'),noteSubject='',noteTopic='',paperLevel='',paperCourse=lower('selectedCourse'),paperBoard=lower('globalBoard'),paperSubject='',paperTopic='',paperType='',contentType=lower('globalContentType');
+  const q=lower('searchInput'), noteLevel='',noteCourse=lower('selectedCourse'),noteBoard=lower('globalBoard'),noteSubject='',noteTopic='',paperLevel='',paperCourse=lower('selectedCourse'),paperBoard=lower('globalBoard'),paperSubject='',paperTopic='',paperType='',contentType=lower('globalContentType');
   const searchMatch=x=>!q||[x.title,x.study_level,x.level,x.course,x.board_exam,x.board,x.topic,x.subject,x.chapter,x.excerpt,x.seo_description,x.seo].join(' ').toLowerCase().includes(q);
-  const notes=contentCache.filter(x=>{const type=(x.content_type||x.type||'Study Notes').toLowerCase();return type!=='question paper'&&(!contentType||type===contentType)&&(!noteLevel||(x.study_level||x.level).toLowerCase()===noteLevel)&&(!noteCourse||x.course.toLowerCase()===noteCourse)&&(!noteBoard||(x.board_exam||x.board||'').toLowerCase()===noteBoard)&&(!noteSubject||(x.subject||'mathematics').toLowerCase().includes(noteSubject))&&(!noteTopic||(x.chapter||x.topic||'').toLowerCase().includes(noteTopic))&&searchMatch(x)});
-  const papers=contentCache.filter(x=>(x.content_type||x.type)==='Question Paper'&&(!paperLevel||(x.study_level||x.level).toLowerCase()===paperLevel)&&(!paperCourse||x.course.toLowerCase()===paperCourse)&&(!paperBoard||(x.board_exam||x.board||'').toLowerCase()===paperBoard)&&(!paperSubject||(x.subject||'mathematics').toLowerCase().includes(paperSubject))&&(!paperTopic||(x.chapter||x.topic||'').toLowerCase().includes(paperTopic))&&(!paperType||(x.paper_type||x.paperType||'').toLowerCase()===paperType)&&searchMatch(x));
+  const notes=contentCache.filter(x=>{const type=(x.content_type||x.type||'Study Notes').toLowerCase();return type!=='question paper'&&(!contentType||type===contentType)&&(!noteLevel||(x.study_level||x.level).toLowerCase()===noteLevel)&&(!noteCourse||String(x.course||'').toLowerCase()===noteCourse)&&(!noteBoard||(x.board_exam||x.board||'').toLowerCase()===noteBoard)&&(!noteSubject||(x.subject||'mathematics').toLowerCase().includes(noteSubject))&&(!noteTopic||(x.chapter||x.topic||'').toLowerCase().includes(noteTopic))&&searchMatch(x)});
+  const papers=contentCache.filter(x=>(x.content_type||x.type)==='Question Paper'&&(!paperLevel||(x.study_level||x.level).toLowerCase()===paperLevel)&&(!paperCourse||String(x.course||'').toLowerCase()===paperCourse)&&(!paperBoard||(x.board_exam||x.board||'').toLowerCase()===paperBoard)&&(!paperSubject||(x.subject||'mathematics').toLowerCase().includes(paperSubject))&&(!paperTopic||(x.chapter||x.topic||'').toLowerCase().includes(paperTopic))&&(!paperType||(x.paper_type||x.paperType||'').toLowerCase()===paperType)&&searchMatch(x));
   $('notesList').innerHTML=notes.length?notes.map(card).join(''):'<p class="muted">No published notes match these filters yet.</p>';
   $('papersList').innerHTML=papers.length?papers.map(card).join(''):'<p class="muted">No published question papers match these filters yet.</p>';
   // Render LaTeX in catalogue cards as well as in the full reader.
@@ -209,8 +209,8 @@ document.addEventListener('fullscreenchange',()=>{const b=$('readerFullscreen');
 $('contentModal')?.addEventListener('click',e=>{if(e.target===$('contentModal'))closeModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 ['globalBoard','globalContentType'].forEach(id=>$(id)?.addEventListener('change',filterRender));
-$('searchButton')?.addEventListener('click',()=>{filterRender();const q=value('searchInput')||value('noteTopic');$('searchMessage').textContent=q?`Showing published content matching “${q}”.`:'Showing all published content.';});
-$('searchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){$('searchButton').click();$('content-browser').scrollIntoView({behavior:'smooth'});}});
+$('searchInput')?.addEventListener('input',filterRender);
+$('searchInput')?.addEventListener('keydown',e=>{if(e.key==='Enter'){filterRender();document.getElementById('notes').scrollIntoView({behavior:'smooth'});}});
 
 // Safe scientific calculator: tokenizer + recursive-descent parser (no eval).
 function calculate(expression, variables = {}) {
@@ -321,26 +321,35 @@ $('downloadPdf')?.addEventListener('click', async () => {
   finally { button.disabled=false;button.textContent=original; }
 });
 
-// Class-first homepage navigation: keep the catalogue filtered by the selected class and show one workspace at a time.
+// Main navigation and View all: show only the requested content area.
 function setupClassFirstHome(){
- const courseState=document.createElement('input');courseState.type='hidden';courseState.id='selectedCourse';document.body.appendChild(courseState);
- const cards=[...document.querySelectorAll('.class-card,.explore-level')];
- const tabs=[...document.querySelectorAll('.content-tab')];
+ const selected=document.createElement('input');selected.type='hidden';selected.id='selectedCourse';document.body.appendChild(selected);
+ const cards=[...document.querySelectorAll('.class-card')];
  const panels={notes:$('notes'),papers:$('papers'),'student-editor':$('student-editor')};
  function chooseCourse(course){
-  cards.forEach(card=>card.classList.toggle('active',card.dataset.course===course));
-  $('selectedCourse').value=course;
+  cards.forEach(card=>card.classList.toggle('active',(card.dataset.course||'')===course));
+  selected.value=course;
   const mobileSelect=$('mobileCourseSelect');if(mobileSelect)mobileSelect.value=course;
   filterRender();
  }
- function choosePanel(name){
-  tabs.forEach(tab=>tab.classList.toggle('active',tab.dataset.panel===name));
+ function showPanel(name,all=false){
   Object.entries(panels).forEach(([key,panel])=>{if(panel)panel.hidden=key!==name;});
+  document.querySelectorAll('[data-main-nav]').forEach(link=>link.classList.toggle('active',link.dataset.mainNav===name));
+  if(all)panels[name]?.scrollIntoView({behavior:'smooth',block:'start'});
  }
  cards.forEach(card=>card.addEventListener('click',()=>chooseCourse(card.dataset.course||'')));
- const mobileSelect=$('mobileCourseSelect');if(mobileSelect){mobileSelect.addEventListener('change',()=>{chooseCourse(mobileSelect.value);});}
- tabs.forEach(tab=>tab.addEventListener('click',()=>choosePanel(tab.dataset.panel)));
- $('globalBoard')?.addEventListener('change',filterRender);
- chooseCourse('');choosePanel('notes');
+ const mobileSelect=$('mobileCourseSelect');if(mobileSelect)mobileSelect.addEventListener('change',()=>chooseCourse(mobileSelect.value));
+ document.querySelectorAll('[data-main-nav]').forEach(link=>link.addEventListener('click',e=>{
+  const name=link.dataset.mainNav;
+  e.preventDefault();
+  if(panels[name]){showPanel(name);panels[name]?.scrollIntoView({behavior:'smooth',block:'start'});}
+  else {showPanel('notes');document.getElementById('home')?.scrollIntoView({behavior:'smooth'});}
+ }));
+ document.querySelectorAll('[data-view-all]').forEach(link=>link.addEventListener('click',e=>{
+  e.preventDefault();showPanel(link.dataset.viewAll,true);
+ }));
+ document.querySelectorAll('.global-board-label select,.global-type-label select').forEach(el=>el.addEventListener('change',filterRender));
+ chooseCourse('');
+ showPanel('notes');
 }
 document.addEventListener('DOMContentLoaded',setupClassFirstHome);
