@@ -48,6 +48,7 @@ $('copyStudent')?.addEventListener('click', async () => {
   catch { toast('Clipboard permission unavailable. Select and copy the text manually.'); }
 });
 $('clearStudent')?.addEventListener('click', () => { $('studentEditor').innerHTML = ''; toast('Editor cleared.'); });
+$('printStudent')?.addEventListener('click', () => window.print());
 
 // Admin session, authentication and D1 content management.
 function setAdminUI(isAuthed, email = '') {
