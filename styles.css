@@ -229,3 +229,26 @@
  .home-dashboard .content-card p{font-size:9px!important}
  .footer{border-radius:16px 16px 0 0!important}
 }
+
+
+/* Homepage navigation and catalogue correction */
+.mobile-menu-btn,.mobile-profile-btn,.mobile-feature-strip,.mobile-explore,.mobile-benefits,.mobile-bottom-nav{display:none!important}
+.topbar .logo{display:none!important}.topbar .brand{min-width:150px}.topbar .search{margin-left:auto}
+.content-tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 12px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-radius:13px}
+.content-tabs .global-type-label{margin-left:0}.content-tabs .global-board-label{margin-left:auto}
+.latest-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}.latest-heading a{font-size:12px;font-weight:800;color:#0878ff;white-space:nowrap}
+#notes[hidden],#papers[hidden],#student-editor[hidden]{display:none!important}
+@media(max-width:560px){
+.topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;background:linear-gradient(110deg,#05245f,#073b86 60%,#29105d);color:#fff}
+.topbar .brand{order:0;flex:1;min-width:0}.topbar .brand-name{font-size:22px;color:#fff}.topbar .tagline{color:#d5e5ff;font-size:10px}
+.topbar .search{order:1;flex:0 1 42px;width:42px;max-width:42px;min-width:42px;height:40px;margin-left:0;padding:0;justify-content:center;overflow:hidden;background:#ffffff15;border:1px solid #ffffff35;border-radius:12px;color:#fff;transition:all .18s}
+.topbar .search:focus-within{flex-basis:100%;max-width:100%;width:100%;order:3;justify-content:flex-start;padding:0 12px}
+.topbar .search span{font-size:23px;line-height:1;flex:0 0 auto}.topbar .search input{display:block;width:100%;min-width:0;font-size:12px;color:#fff;padding:8px 0}.topbar .search input::placeholder{color:#dceaff}
+.topbar .theme-btn{display:none!important}.topbar .nav{order:2;display:flex;flex:0 0 100%;width:100%;gap:5px;overflow-x:auto;padding:2px 0 0;scrollbar-width:none}
+.topbar .nav a{flex:0 0 auto;padding:8px 10px;border:1px solid #ffffff25;border-radius:9px;background:#ffffff0d;color:#fff;font-size:11px}.topbar .nav a.active{background:#fff;color:#0a3979}
+.home-dashboard{padding:0 10px;margin:10px auto}.mobile-hero{margin:0 0 10px!important;min-height:120px!important;padding:15px!important}
+.class-picker{padding:10px!important;margin:0 0 9px!important}.class-picker .section-head{margin:0 0 9px}.class-picker .section-head h2{font-size:14px}
+.class-grid{display:flex!important;flex-wrap:nowrap;overflow-x:auto;gap:7px;padding:2px 1px 7px;scrollbar-width:thin}.class-card{flex:0 0 auto;min-width:78px;padding:9px 11px;border-radius:10px;align-items:center;text-align:center}.class-card strong{font-size:12px;white-space:nowrap}.class-card small{display:none}.mobile-class-select{display:none!important}
+.content-tabs{display:flex!important;flex-wrap:wrap;gap:7px;margin:0 0 9px!important;padding:9px!important}.global-type-label,.global-board-label{display:flex;flex:1 1 130px;justify-content:space-between;margin:0!important;padding:0!important;background:transparent!important;border:0!important;font-size:10px}.global-type-label select,.global-board-label select{min-width:0;max-width:none;width:100%;font-size:11px;padding:8px!important}.global-type-label{flex-basis:100%}
+.home-dashboard>.section{padding:11px!important;margin:0 0 10px!important;border-radius:13px}.latest-heading h2{font-size:15px!important}#notesList,#papersList{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.home-dashboard .content-card{padding:10px!important}.footer{margin-bottom:0}
+}

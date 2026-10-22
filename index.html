@@ -12,11 +12,10 @@
 </head>
 <body>
 <header class="topbar">
-  <button class="mobile-menu-btn" type="button" aria-label="Go to home" onclick="document.getElementById('home').scrollIntoView({behavior:'smooth'})">☰</button>
-  <a class="brand" href="#home" aria-label="MathsLearn home"><div class="logo">△</div><div><div class="brand-name">Maths<span>Learn</span></div><div class="tagline">Explore · Practise · Master</div></div></a>
-  <nav class="nav"><a class="active" href="#home">Home</a><a href="#notes">Notes</a><a href="#papers">Question Papers</a><a href="#student-editor">Student Editor</a></nav>
-  <label class="search">⌕ <input id="searchInput" placeholder="Search notes, topics, papers..." aria-label="Search"></label>
-  <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☼</button><a class="mobile-profile-btn" href="./admin/" aria-label="Admin profile">●</a>
+  <a class="brand" href="#home" aria-label="MathsLearn home"><div><div class="brand-name">Maths<span>Learn</span></div><div class="tagline">Explore · Practise · Master</div></div></a>
+  <nav class="nav" aria-label="Main navigation"><a class="active" href="#home" data-main-nav="home">Home</a><a href="#notes" data-main-nav="notes">Notes</a><a href="#papers" data-main-nav="papers">Question Papers</a><a href="#student-editor" data-main-nav="student-editor">Student Editor</a></nav>
+  <label class="search"><span aria-hidden="true">⌕</span><input id="searchInput" placeholder="Search notes, topics, papers..." aria-label="Search"></label>
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">☼</button>
 </header>
 <main class="wrap home-dashboard">
 <section class="mobile-hero" aria-label="MathsLearn introduction">
@@ -24,7 +23,7 @@
  <div class="mobile-hero-art" aria-hidden="true"><span class="hero-pi">π</span><span class="hero-root">√x</span><span class="hero-cube">◇</span><div class="hero-book"><i></i><i></i></div><span class="hero-triangle">△</span></div>
 </section>
 <section class="class-picker section" id="home">
- <div class="section-head"><h2>Choose Class / Exam</h2><span class="muted">Select a class to view its notes, papers and tools</span></div>
+ <div class="section-head"><h2>Choose Class / Exam</h2></div>
  <div class="class-grid" role="group" aria-label="Choose class or exam">
   <button class="class-card active" type="button" data-course=""><strong>All</strong><small>All published content</small></button>
   <button class="class-card" type="button" data-course="Class 9"><strong>Class 9</strong><small>Mathematics</small></button>
@@ -42,16 +41,7 @@
   </select>
  </label>
 </section>
-<section class="mobile-feature-strip" aria-label="Quick access">
- <a class="feature-tile feature-notes" href="#notes"><span class="feature-icon">▤</span><span><strong>Study Notes</strong><small>Study level &amp; chapter</small><small>Theory and examples</small></span></a>
- <a class="feature-tile feature-papers" href="#papers"><span class="feature-icon">▧</span><span><strong>Question Papers</strong><small>Board, entrance</small><small>and practice sets</small></span></a>
- <a class="feature-tile feature-editor" href="#student-editor"><span class="feature-icon">✎</span><span><strong>Student Editor</strong><small>Write and copy</small><small>maths expressions</small></span></a>
- <a class="feature-tile feature-practice" href="#notes" data-practice-shortcut><span class="feature-icon">☷</span><span><strong>Practice Tests</strong><small>MCQs, assignments</small><small>and solutions</small></span></a>
-</section>
 <nav class="content-tabs" aria-label="Content type">
- <button type="button" class="content-tab active" data-panel="notes">📚 Notes</button>
- <button type="button" class="content-tab" data-panel="papers">📝 Papers</button>
- <button type="button" class="content-tab" data-panel="student-editor">✎ Editor</button>
  <label class="global-type-label">Content
   <select id="globalContentType" aria-label="Filter by content type">
    <option value="">All content</option><option value="Study Notes">Notes &amp; Theory</option><option value="Solved Paper">Solved Papers</option><option value="Solved Examples">Solved Examples</option><option value="Unsolved Questions">Practice Questions</option><option value="Important Questions">Important Questions</option><option value="Formula Sheet">Formula Sheets</option>
@@ -63,23 +53,14 @@
   </select>
  </label>
 </nav>
-<section class="mobile-explore section" aria-label="Explore mathematics">
- <div class="mobile-section-heading"><h2>▦ Explore Mathematics</h2><span>Choose your learning level</span></div>
- <div class="explore-level-grid">
-  <button type="button" data-course="Class 9" class="explore-level level-school"><strong>School Mathematics</strong><small>Class 9–10</small></button>
-  <button type="button" data-course="Class 11" class="explore-level level-higher"><strong>Higher Secondary</strong><small>Class 11–12</small></button>
-  <button type="button" data-course="B.Sc Mathematics" class="explore-level level-undergrad"><strong>Undergraduate</strong><small>B.Sc Mathematics</small></button>
-  <button type="button" data-course="IIT JAM" class="explore-level level-entrance"><strong>Entrance Preparation</strong><small>IIT JAM · ISI · TIFR CAM</small></button>
- </div>
-</section>
 <section class="section" id="notes">
 
- <div class="mobile-section-heading latest-heading"><h2>Latest Content</h2><a href="#notes">View all →</a></div>
- <div id="notesList" class="content-grid"></div><strong>Limits and Continuity</strong><p class="muted">Sample card for layout preview. Replace with verified notes before launch.</p></article></div>
+ <div class="mobile-section-heading latest-heading"><h2>Study Notes &amp; Solutions</h2><a href="#notes" data-view-all="notes">View all →</a></div>
+ <div id="notesList" class="content-grid"></div>
 </section>
 <section class="section" id="papers">
- <div class="section-head"><h2>📝 Question Papers</h2></div>
- <div id="papersList" class="content-grid"></div><strong>Quadratic Equations — Practice Paper</strong><p class="muted">Sample card for layout preview. Replace with verified papers before launch.</p></article></div>
+ <div class="mobile-section-heading latest-heading"><h2>Question Papers</h2><a href="#papers" data-view-all="papers">View all →</a></div>
+ <div id="papersList" class="content-grid"></div>
 </section>
 
 <section class="section" id="student-editor">
@@ -91,7 +72,6 @@
  <p class="muted tiny">The student editor runs in this browser only. It does not upload or publish your writing.</p>
 </section>
 </main>
-<section class="mobile-benefits" aria-label="MathsLearn benefits"><div><span>🚀</span><strong>Explore</strong><small>Quality Content</small></div><div><span>📊</span><strong>Practice</strong><small>Improve Skills</small></div><div><span>🏆</span><strong>Master</strong><small>Achieve Goals</small></div></section>
 <footer class="footer">MathsLearn · Explore · Practise · Master<br>Mathematics notes, question papers and tools.<br><a href="#privacy">Privacy note</a> · <a href="#contact">Contact</a><p id="privacy" class="tiny">Privacy: admin content is sent to the MathsLearn backend and stored in Cloudflare D1. Do not enter personal student data unless a suitable privacy policy and safeguards are in place.</p><p id="contact" class="tiny">Contact: add your official support email before public launch.</p></footer>
 <div class="content-modal" id="contentModal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="content-modal-card" id="contentModalCard"><button class="modal-close" id="modalClose" aria-label="Close content">✕</button><div class="reader-actions"><span class="pill" id="modalType"></span><button class="btn-secondary" id="readerFullscreen" type="button">⛶ Fullscreen reading</button></div><h2 id="modalTitle"></h2><p class="muted" id="modalMeta"></p><div id="modalBody" class="article-body"></div><div class="actions pdf-actions"><button class="btn-primary" id="downloadPdf">Download PDF</button><span class="muted tiny">PDF includes a MathsLearn website watermark.</span></div></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -100,11 +80,4 @@
 <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" crossorigin="anonymous"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
 <script defer src="./app.js"></script>
-<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
- <a class="active" href="#home" data-mobile-nav="home"><span>⌂</span><small>Home</small></a>
- <a href="#notes" data-mobile-nav="notes"><span>▤</span><small>Notes</small></a>
- <a href="#papers" data-mobile-nav="papers"><span>▧</span><small>Papers</small></a>
- <a href="#student-editor" data-mobile-nav="student-editor"><span>✎</span><small>Editor</small></a>
- <a href="#home" data-mobile-nav="more"><span>☰</span><small>More</small></a>
-</nav>
 </body></html>
