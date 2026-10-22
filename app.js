@@ -321,35 +321,43 @@ $('downloadPdf')?.addEventListener('click', async () => {
   finally { button.disabled=false;button.textContent=original; }
 });
 
-// Main navigation and View all: show only the requested content area.
+// Reliable header navigation: always reveal the selected panel before scrolling to it.
 function setupClassFirstHome(){
  const selected=document.createElement('input');selected.type='hidden';selected.id='selectedCourse';document.body.appendChild(selected);
  const cards=[...document.querySelectorAll('.class-card')];
- const panels={notes:$('notes'),papers:$('papers'),'student-editor':$('student-editor')};
+ const panels={notes:document.getElementById('notes'),papers:document.getElementById('papers'),'student-editor':document.getElementById('student-editor')};
  function chooseCourse(course){
   cards.forEach(card=>card.classList.toggle('active',(card.dataset.course||'')===course));
   selected.value=course;
-  const mobileSelect=$('mobileCourseSelect');if(mobileSelect)mobileSelect.value=course;
+  const mobileSelect=document.getElementById('mobileCourseSelect');if(mobileSelect)mobileSelect.value=course;
   filterRender();
  }
- function showPanel(name,all=false){
+ function showPanel(name,scroll=true){
   Object.entries(panels).forEach(([key,panel])=>{if(panel)panel.hidden=key!==name;});
   document.querySelectorAll('[data-main-nav]').forEach(link=>link.classList.toggle('active',link.dataset.mainNav===name));
-  if(all)panels[name]?.scrollIntoView({behavior:'smooth',block:'start'});
+  if(scroll&&panels[name])requestAnimationFrame(()=>panels[name].scrollIntoView({behavior:'smooth',block:'start'}));
  }
  cards.forEach(card=>card.addEventListener('click',()=>chooseCourse(card.dataset.course||'')));
- const mobileSelect=$('mobileCourseSelect');if(mobileSelect)mobileSelect.addEventListener('change',()=>chooseCourse(mobileSelect.value));
- document.querySelectorAll('[data-main-nav]').forEach(link=>link.addEventListener('click',e=>{
+ const mobileSelect=document.getElementById('mobileCourseSelect');
+ if(mobileSelect)mobileSelect.addEventListener('change',()=>chooseCourse(mobileSelect.value));
+ document.querySelectorAll('[data-main-nav]').forEach(link=>link.addEventListener('click',event=>{
+  event.preventDefault();
   const name=link.dataset.mainNav;
-  e.preventDefault();
-  if(panels[name]){showPanel(name);panels[name]?.scrollIntoView({behavior:'smooth',block:'start'});}
-  else {showPanel('notes');document.getElementById('home')?.scrollIntoView({behavior:'smooth'});}
+  if(name==='home'){
+   showPanel('notes',false);
+   document.getElementById('home')?.scrollIntoView({behavior:'smooth',block:'start'});
+   return;
+  }
+  if(panels[name])showPanel(name,true);
  }));
- document.querySelectorAll('[data-view-all]').forEach(link=>link.addEventListener('click',e=>{
-  e.preventDefault();showPanel(link.dataset.viewAll,true);
+ document.querySelectorAll('[data-view-all]').forEach(link=>link.addEventListener('click',event=>{
+  event.preventDefault();
+  const name=link.dataset.viewAll;
+  if(panels[name])showPanel(name,true);
  }));
  document.querySelectorAll('.global-board-label select,.global-type-label select').forEach(el=>el.addEventListener('change',filterRender));
  chooseCourse('');
- showPanel('notes');
+ showPanel('notes',false);
 }
-document.addEventListener('DOMContentLoaded',setupClassFirstHome);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupClassFirstHome,{once:true});
+else setupClassFirstHome();
