@@ -22,9 +22,11 @@ export function slugify(value) {
 export function buildContentUrlPath(item, customSlug = "") {
   const prefix = TYPE_PATHS[item.content_type] || "notes";
   const course = slugify(item.course) || "general";
-  const chapter = slugify(item.chapter || item.topic) || "general";
+  const board = slugify(item.board_exam);
+  const subject = slugify(item.subject) || "mathematics";
+  const chapter = slugify(item.topic || item.chapter) || "general";
   const leaf = slugify(customSlug || item.title) || "content";
-  return [prefix, course, chapter, leaf].join("/");
+  return [prefix, course, ...(board ? [board] : []), subject, chapter, leaf].join("/");
 }
 
 export function escapeHtml(value) {
