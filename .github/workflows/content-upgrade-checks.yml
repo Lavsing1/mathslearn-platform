@@ -58,5 +58,9 @@ jobs:
               source = api_file.read_text()
               missing_api_types = [name for name in expected_types if f'"{name}"' not in source]
               assert not missing_api_types, f'{api_file} is missing supported types: {missing_api_types}'
-          print('All migrations + Admin Studio content types + API validation: PASS')
+          homepage = Path('index.html').read_text()
+          assert '<option value="Question Paper">' in homepage, 'Homepage content filter is missing Question Paper'
+          app_source = Path('app.js').read_text()
+          assert "(!contentType||contentType==='question paper')" in app_source, 'Global content type filter is not applied to question papers'
+          print('All migrations + Admin Studio content types + API validation + homepage filters: PASS')
           PY
