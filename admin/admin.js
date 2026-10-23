@@ -5,8 +5,8 @@ function toast(msg){const t=$('toast');if(!t)return;t.textContent=msg;t.classLis
 async function api(path,opts={}){const r=await fetch(path,{credentials:'same-origin',...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Error(d.error||`Request failed (${r.status})`);return d;}
 function renderMath(el){if(window.renderMathInElement)window.renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});}
 function setSession(on,email=''){isAuthed=on;$('loginCard').hidden=on;$('workspace').hidden=!on;$('sessionActions').hidden=!on;$('whoami').textContent=email?`Signed in: ${email}`:'';}
-async function check(){try{const d=await api('/api/auth/me',{method:'GET'});setSession(!!d.authenticated,d.email||'');if(d.authenticated)await loadRecords()}catch{setSession(false)}}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginMessage').textContent='Signing in…';try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});$('password').value='';$('loginMessage').textContent='';setSession(true,d.email||$('email').value.trim());await loadRecords();toast('Login successful.')}catch(err){$('loginMessage').textContent=err.message;}});
+async function check(){try{const d=await api('/api/auth/me',{method:'GET'});setSession(!!d.authenticated,d.email||'');if(d.authenticated){await loadRecords();restoreUiState();}}catch{setSession(false)}}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginMessage').textContent='Signing in…';try{const d=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});$('password').value='';$('loginMessage').textContent='';setSession(true,d.email||$('email').value.trim());await loadRecords();restoreUiState();toast('Login successful.')}catch(err){$('loginMessage').textContent=err.message;}});
 $('logoutBtn').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',body:'{}'})}catch{}setSession(false);records=[];toast('Signed out.');});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.admin-pane').forEach(x=>x.hidden=true);$('pane-'+b.dataset.tab).hidden=false;if(b.dataset.tab==='manage')loadRecords()}));
 document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>{ $('editor').focus();document.execCommand(b.dataset.cmd,false,b.dataset.val||null);}));
@@ -55,6 +55,67 @@ $('backToCategories')?.addEventListener('click',()=>{if($('title').value.trim()|
 $('continueToStudio')?.addEventListener('click',()=>{if(!$('title').value.trim()){$('writeMessage').textContent='Please enter a content title first.';$('title').focus();return;}$('metadataPanel').hidden=true;$('writingStudio').hidden=false;refreshLivePreview();window.scrollTo({top:0,behavior:'smooth'});$('editor').focus();});
 $('type')?.addEventListener('change',()=>{$('selectedKind').textContent=$('type').value;$('formHeading').textContent=(currentId?'Edit ':'Create ')+$('type').value;refreshLivePreview();});
 check();
+
+
+// Keep the admin workspace and in-progress editor content when the page is refreshed.
+const UI_STATE_KEY='mathslearn_admin_workspace_v1';
+function saveUiState(){
+  if(!isAuthed)return;
+  try{
+    const ids=['title','type','paperType','level','course','board','subject','topic','chapter','excerpt','thumbnail','description'];
+    const fields={};
+    ids.forEach(id=>{if($(id))fields[id]=$(id).value;});
+    const activeTab=document.querySelector('[data-tab].active')?.dataset.tab||'write';
+    const state={
+      fields, editorHtml:$('editor')?.innerHTML||'', currentId,
+      activeTab, categoryPickerHidden:$('categoryPicker')?.hidden,
+      contentWorkflowHidden:$('contentWorkflow')?.hidden,
+      metadataPanelHidden:$('metadataPanel')?.hidden,
+      writingStudioHidden:$('writingStudio')?.hidden,
+      scrollY:window.scrollY
+    };
+    sessionStorage.setItem(UI_STATE_KEY,JSON.stringify(state));
+  }catch(e){}
+}
+function restoreUiState(){
+  try{
+    const raw=sessionStorage.getItem(UI_STATE_KEY);
+    if(!raw)return;
+    const state=JSON.parse(raw);
+    if(!state||!state.fields)return;
+    Object.entries(state.fields).forEach(([id,value])=>{if($(id)&&value!==undefined)$(id).value=value;});
+    if(typeof state.editorHtml==='string')$('editor').innerHTML=state.editorHtml;
+    currentId=state.currentId||null;
+    if($('categoryPicker'))$('categoryPicker').hidden=!!state.categoryPickerHidden;
+    if($('contentWorkflow'))$('contentWorkflow').hidden=!!state.contentWorkflowHidden;
+    if($('metadataPanel'))$('metadataPanel').hidden=!!state.metadataPanelHidden;
+    if($('writingStudio'))$('writingStudio').hidden=!!state.writingStudioHidden;
+    if(currentId){
+      const item=records.find(x=>x.id===currentId);
+      if(item){
+        $('selectedKind').textContent=$('type').value;
+        $('formHeading').textContent='Edit '+$('type').value;
+        $('publishBtn').textContent=item.status==='published'?'Update published content':'Publish to students';
+      }
+    }
+    const tab=state.activeTab||'write';
+    document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+    document.querySelectorAll('.admin-pane').forEach(p=>p.hidden=true);
+    if($('pane-'+tab))$('pane-'+tab).hidden=false;
+    refreshLivePreview();
+    requestAnimationFrame(()=>window.scrollTo(0,Math.max(0,Number(state.scrollY)||0)));
+  }catch(e){}
+}
+document.addEventListener('input',saveUiState);
+document.addEventListener('change',saveUiState);
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-tab],[data-kind],#continueToStudio,#backToCategories,#fullscreenEditor,[data-edit]')) {
+    setTimeout(saveUiState,0);
+  }
+});
+window.addEventListener('pagehide',saveUiState);
+window.addEventListener('scroll',()=>{if(isAuthed)saveUiState();},{passive:true});
+
 
 $('fullscreenEditor')?.addEventListener('click',()=>{const studio=$('writingStudio');const active=!studio.classList.contains('is-fullscreen');studio.classList.toggle('is-fullscreen',active);$('fullscreenEditor').textContent=active?'⤢ Exit full screen':'⛶ Full screen';$('fullscreenEditor').setAttribute('aria-pressed',String(active));document.body.style.overflow=active?'hidden':'';});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('writingStudio')?.classList.contains('is-fullscreen')){$('writingStudio').classList.remove('is-fullscreen');$('fullscreenEditor').textContent='⛶ Full screen';$('fullscreenEditor').setAttribute('aria-pressed','false');document.body.style.overflow='';}});
