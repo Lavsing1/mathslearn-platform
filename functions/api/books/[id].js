@@ -1,4 +1,5 @@
 import { json, getAdmin, sameOrigin } from "../../_utils.js";
+import { slugify } from "../../_seo.js";
 const MAX_BODY=2_500_000;
 async function body(request){const t=await request.text();if(new TextEncoder().encode(t).byteLength>MAX_BODY)throw new Error("Too large");return JSON.parse(t);}
 export async function onRequestPut({request,env,params}) {
@@ -25,10 +26,19 @@ export async function onRequestPut({request,env,params}) {
   const serialized=JSON.stringify({book,lectures});if(new TextEncoder().encode(serialized).byteLength>MAX_BODY)return json({error:"Book data is too large. Export a backup and reduce image sizes."},413);
   const status=["draft","published","hidden"].includes(x.status)?x.status:old.status;
   if(status==="published"&&!lectures.some(l=>Array.isArray(l.steps)&&l.steps.length))return json({error:"Add chapter content before publishing."},400);
+  const slug=old.slug || (slugify(old.title)+"-"+String(id).slice(0,8));
+  const url_path="books/"+slug;
+  const duplicate=await env.DB.prepare("SELECT id,title FROM books WHERE url_path=? AND id<>? LIMIT 1").bind(url_path,id).first();
+  if(duplicate)return json({error:"This book URL already exists. The current book URL was not changed.",code:"DUPLICATE_URL",url_path},409);
   const now=new Date().toISOString();
-  await env.DB.prepare("UPDATE books SET title=?,subtitle=?,author=?,org=?,page_size=?,book_json=?,lectures_json=?,status=?,updated_at=? WHERE id=?")
-    .bind(book.title,book.subtitle,book.author,book.org,book.size,JSON.stringify(book),JSON.stringify(lectures),status,now,id).run();
-  return json({book:{id,...book,status,updated_at:now}});
+  try {
+    await env.DB.prepare("UPDATE books SET title=?,subtitle=?,author=?,org=?,page_size=?,book_json=?,lectures_json=?,status=?,slug=?,url_path=?,updated_at=? WHERE id=?")
+      .bind(book.title,book.subtitle,book.author,book.org,book.size,JSON.stringify(book),JSON.stringify(lectures),status,slug,url_path,now,id).run();
+  } catch(error) {
+    if(/unique|constraint/i.test(String(error?.message||error)))return json({error:"This book URL already exists. The current book URL was not changed.",code:"DUPLICATE_URL",url_path},409);
+    throw error;
+  }
+  return json({book:{id,...book,status,slug,url_path,updated_at:now}});
 }
 export async function onRequestDelete({request,env,params}) {
   if(!sameOrigin(request))return json({error:"Invalid request origin."},403);
