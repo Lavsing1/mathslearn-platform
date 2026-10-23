@@ -1,4 +1,5 @@
 import { json, getAdmin, sameOrigin } from "../../_utils.js";
+import { slugify } from "../../_seo.js";
 const MAX_BODY = 2_500_000;
 async function body(request) {
   const text = await request.text();
@@ -17,19 +18,23 @@ function validate(x) {
   if (x.status==="published" && !lectures.some(l=>Array.isArray(l.steps)&&l.steps.length)) return {error:"Add chapter content before publishing."};
   return {book,lectures,status:validStatus(x.status)};
 }
+function publicShape(row) {
+  const slug = row.slug || slugify(row.title) + "-" + String(row.id).slice(0,8);
+  return {...row, slug, url_path:row.url_path || "books/" + slug};
+}
 export async function onRequestGet({request,env}) {
   if (!env.DB) return json({error:"D1 binding DB is missing."},503);
   const admin = await getAdmin(request,env);
   const url = new URL(request.url), id=url.searchParams.get("id");
   if (id) {
-    const row = await env.DB.prepare("SELECT id,title,subtitle,author,org,page_size,status,book_json,lectures_json,created_at,updated_at FROM books WHERE id=?").bind(id).first();
+    const row = await env.DB.prepare("SELECT id,title,subtitle,author,org,page_size,status,book_json,lectures_json,slug,url_path,created_at,updated_at FROM books WHERE id=?").bind(id).first();
     if (!row || (!admin && row.status!=="published")) return json({error:"Book not found."},404);
-    return json({book:{...row,book:JSON.parse(row.book_json),lectures:JSON.parse(row.lectures_json)}});
+    return json({book:{...publicShape(row),book:JSON.parse(row.book_json),lectures:JSON.parse(row.lectures_json)}});
   }
   const rows = admin
-    ? await env.DB.prepare("SELECT id,title,subtitle,author,org,page_size,status,created_at,updated_at FROM books ORDER BY updated_at DESC LIMIT 200").all()
-    : await env.DB.prepare("SELECT id,title,subtitle,author,org,page_size,status,created_at,updated_at FROM books WHERE status='published' ORDER BY updated_at DESC LIMIT 200").all();
-  return json({books:rows.results||[]});
+    ? await env.DB.prepare("SELECT id,title,subtitle,author,org,page_size,status,slug,url_path,created_at,updated_at FROM books ORDER BY updated_at DESC LIMIT 200").all()
+    : await env.DB.prepare("SELECT id,title,subtitle,author,org,page_size,status,slug,url_path,created_at,updated_at FROM books WHERE status='published' ORDER BY updated_at DESC LIMIT 200").all();
+  return json({books:(rows.results||[]).map(publicShape)});
 }
 export async function onRequestPost({request,env}) {
   if (!sameOrigin(request)) return json({error:"Invalid request origin."},403);
@@ -38,7 +43,15 @@ export async function onRequestPost({request,env}) {
   let x; try{x=await body(request)}catch{return json({error:"Invalid or oversized book data."},400)}
   const v=validate(x); if(v.error)return json({error:v.error},400);
   const now=new Date().toISOString(), id=crypto.randomUUID();
-  await env.DB.prepare("INSERT INTO books (id,title,subtitle,author,org,page_size,book_json,lectures_json,status,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
-    .bind(id,v.book.title,v.book.subtitle,v.book.author,v.book.org,v.book.size,JSON.stringify(v.book),JSON.stringify(v.lectures),v.status,now,now).run();
-  return json({book:{id,...v.book,status:v.status,created_at:now,updated_at:now}},201);
+  const slug=slugify(v.book.title), url_path="books/"+slug;
+  const duplicate=await env.DB.prepare("SELECT id,title FROM books WHERE url_path=? LIMIT 1").bind(url_path).first();
+  if(duplicate)return json({error:"Duplicate book URL: /"+url_path+"/ already belongs to “"+duplicate.title+"”. Change the book title to make its URL unique.",code:"DUPLICATE_URL",url_path},409);
+  try {
+    await env.DB.prepare("INSERT INTO books (id,title,subtitle,author,org,page_size,book_json,lectures_json,status,slug,url_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
+      .bind(id,v.book.title,v.book.subtitle,v.book.author,v.book.org,v.book.size,JSON.stringify(v.book),JSON.stringify(v.lectures),v.status,slug,url_path,now,now).run();
+  } catch(error) {
+    if(/unique|constraint/i.test(String(error?.message||error)))return json({error:"This book URL already exists. Choose a different book title.",code:"DUPLICATE_URL",url_path},409);
+    throw error;
+  }
+  return json({book:{id,...v.book,status:v.status,slug,url_path,created_at:now,updated_at:now}},201);
 }
