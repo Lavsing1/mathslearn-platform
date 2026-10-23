@@ -85,9 +85,17 @@ function refreshLivePreview(){if(!$('livePreview'))return;const f=formData('draf
 $('editor').addEventListener('input',()=>{refreshLivePreview();scheduleAutoSave();});
 ['title','type','level','course','board','subject','topic','chapter','excerpt','thumbnail','paperType','description'].forEach(id=>$(id)?.addEventListener('input',()=>{refreshLivePreview();scheduleAutoSave();}));
 ['type','level','course','board','paperType'].forEach(id=>$(id)?.addEventListener('change',scheduleAutoSave));
-function setPreviewVisible(visible){$('writingStudio').classList.toggle('preview-visible',visible);$('togglePreviewBtn').textContent=visible?'🙈 Hide preview':'👁️ Show preview below';$('togglePreviewBtn').setAttribute('aria-expanded',String(visible));if(visible)refreshLivePreview();}
-$('togglePreviewBtn')?.addEventListener('click',()=>setPreviewVisible(!$('writingStudio').classList.contains('preview-visible')));
-$('previewBtn').addEventListener('click',()=>{setPreviewVisible(true);refreshLivePreview();$('livePreview').scrollIntoView({behavior:'smooth',block:'start'});});
+function setPreviewVisible(visible){
+  const studio=$('writingStudio'), panel=document.querySelector('#writingStudio .preview-column'), toggle=$('togglePreviewBtn');
+  if(!studio||!panel)return;
+  studio.classList.toggle('preview-visible',visible);
+  // Inline display makes the toggle reliable even if cached or conflicting CSS is present.
+  panel.style.display=visible?'block':'none';
+  if(toggle){toggle.textContent=visible?'🙈 Hide preview':'👁️ Show preview below';toggle.setAttribute('aria-expanded',String(visible));}
+  if(visible){refreshLivePreview();panel.hidden=false;}
+}
+$('togglePreviewBtn')?.addEventListener('click',()=>setPreviewVisible(!($('writingStudio')?.classList.contains('preview-visible'))));
+$('previewBtn').addEventListener('click',()=>{setPreviewVisible(true);refreshLivePreview();requestAnimationFrame(()=>document.querySelector('#writingStudio .preview-column')?.scrollIntoView({behavior:'smooth',block:'start'}));});
 async function loadRecords(){if(!isAuthed)return;try{const d=await api('/api/content',{method:'GET'});records=d.items||[];renderRecords()}catch(err){$('contentList').textContent='Could not load content: '+err.message}}
 function renderRecords(){const el=$('contentList');if(!records.length){el.innerHTML='<p class="muted">No content yet. Create a draft to begin.</p>';return;}el.innerHTML=records.map(x=>`<article><strong>${safe(x.title)}</strong><p class="muted">${safe(x.content_type)}<br>${safe(x.study_level)} · ${safe(x.course)}${x.board_exam?' · '+safe(x.board_exam):''}${x.subject?' · '+safe(x.subject):''}${x.topic?' · '+safe(x.topic):''}</p><p><b>Status:</b> ${safe(x.status)}</p><div class="manage-actions"><button class="btn-secondary" data-edit="${safe(x.id)}">Edit</button><button class="btn-secondary" data-toggle="${safe(x.id)}">${x.status==='published'?'Unpublish':'Publish'}</button><button class="btn-secondary" data-delete="${safe(x.id)}">Delete</button></div></article>`).join('');
 el.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>{const x=records.find(v=>v.id===b.dataset.edit);if(!x)return;currentId=x.id;$('title').value=x.title;$('type').value=x.content_type;$('paperType').value=x.paper_type||'';$('level').value=x.study_level;$('course').value=x.course;$('board').value=x.board_exam||'';$('topic').value=x.topic||'';$('subject').value=x.subject||'';$('chapter').value=x.chapter||'';$('excerpt').value=x.excerpt||'';$('thumbnail').value=x.thumbnail_url||'';$('description').value=x.seo_description||'';$('editor').innerHTML=x.body_html||'';$('categoryPicker').hidden=true;$('contentWorkflow').hidden=false;$('metadataPanel').hidden=true;$('writingStudio').hidden=false;$('selectedKind').textContent=x.content_type;$('formHeading').textContent='Edit '+x.content_type;$('publishBtn').textContent=x.status==='published'?'Update published content':'Publish to students';document.querySelector('[data-tab="write"]').click();refreshLivePreview();}));
