@@ -39,11 +39,52 @@ $('textSize')?.addEventListener('change',e=>{ $('editor').focus();document.execC
 document.querySelectorAll('[data-insert]').forEach(b=>b.addEventListener('click',()=>{ $('editor').focus();document.execCommand('insertText',false,b.dataset.insert);}));
 function formData(status){return {id:currentId,title:$('title').value.trim(),content_type:$('type').value,paper_type:$('paperType').value,study_level:$('level').value,course:$('course').value,board_exam:$('board').value,topic:$('topic').value.trim(),subject:$('subject').value.trim(),chapter:$('chapter').value.trim(),excerpt:$('excerpt').value.trim(),thumbnail_url:$('thumbnail').value.trim(),seo_description:$('description').value.trim(),body_html:$('editor').innerHTML,status};}
 function resetForm(){currentId=null;['title','topic','subject','chapter','excerpt','thumbnail','description'].forEach(id=>$(id).value='');$('type').selectedIndex=0;$('level').selectedIndex=0;$('course').selectedIndex=0;$('board').selectedIndex=0;$('paperType').selectedIndex=0;$('editor').innerHTML='';$('preview').hidden=true;$('livePreview').innerHTML='';$('metadataPanel').hidden=false;$('writingStudio').hidden=true;$('previewMeta').textContent='';$('formHeading').textContent='Create content';$('publishBtn').textContent='Publish to students';$('writeMessage').textContent='';$('contentWorkflow').hidden=true;$('categoryPicker').hidden=false;$('selectedKind').textContent='';}
-async function save(status){if(!isAuthed)return;const item=formData(status);if(!item.title){$('writeMessage').textContent='Please add a title.';return;}try{const d=await api(item.id?`/api/content/${encodeURIComponent(item.id)}`:'/api/content',{method:item.id?'PUT':'POST',body:JSON.stringify(item)});currentId=d.item.id;await loadRecords();$('writeMessage').textContent=status==='published'?'Published. Students can now see this content.':'Draft saved privately.';toast($('writeMessage').textContent);}catch(err){$('writeMessage').textContent=err.message;}}
-$('saveDraft').addEventListener('click',()=>save('draft'));$('publishBtn').addEventListener('click',()=>save('published'));$('clearBtn').addEventListener('click',resetForm);
+let autoSaveTimer=null,autoSaveBusy=false,autoSaveQueued=false;
+function setAutoSaveStatus(message){const el=$('autoSaveStatus');if(el)el.textContent=message;}
+async function save(status,quiet=false){
+  if(!isAuthed)return;
+  const item=formData(status);
+  if(!item.title){if(!quiet)$('writeMessage').textContent='Please add a title.';setAutoSaveStatus('Add a title to enable auto-save.');return;}
+  try{
+    const d=await api(item.id?`/api/content/${encodeURIComponent(item.id)}`:'/api/content',{method:item.id?'PUT':'POST',body:JSON.stringify(item)});
+    currentId=d.item.id;
+    await loadRecords();
+    if(status==='published'){
+      $('writeMessage').textContent='Published. Students can now see this content.';
+      setAutoSaveStatus('Published successfully');
+      toast($('writeMessage').textContent);
+    }else{
+      if(!quiet){$('writeMessage').textContent='Draft saved privately.';toast($('writeMessage').textContent);}
+      setAutoSaveStatus('Draft saved automatically · '+new Date().toLocaleTimeString());
+    }
+  }catch(err){
+    setAutoSaveStatus('Auto-save failed — '+err.message);
+    if(!quiet)$('writeMessage').textContent=err.message;
+  }
+}
+function scheduleAutoSave(){
+  if(!isAuthed)return;
+  clearTimeout(autoSaveTimer);
+  setAutoSaveStatus('Unsaved changes…');
+  autoSaveTimer=setTimeout(async()=>{
+    if(autoSaveBusy){autoSaveQueued=true;return;}
+    // Never silently change an already-published item into a draft or publish edits automatically.
+    const existing=records.find(x=>x.id===currentId);
+    if(existing&&existing.status==='published'){
+      setAutoSaveStatus('Published item: use “Update published content” to save changes.');
+      return;
+    }
+    autoSaveBusy=true;
+    await save('draft',true);
+    autoSaveBusy=false;
+    if(autoSaveQueued){autoSaveQueued=false;scheduleAutoSave();}
+  },1800);
+}
+$('saveDraft').addEventListener('click',()=>save('draft'));$('publishBtn').addEventListener('click',()=>save('published'));$('clearBtn').addEventListener('click',()=>{clearTimeout(autoSaveTimer);resetForm();setAutoSaveStatus('');});
 function refreshLivePreview(){if(!$('livePreview'))return;const f=formData('draft');$('previewMeta').textContent=[f.study_level,f.course,f.board_exam,f.subject,f.topic,f.chapter].filter(Boolean).join(' · ');$('livePreview').innerHTML=(f.title?`<h2>${safe(f.title)}</h2>`:'')+(f.body_html||'<p class="muted">Your formatted content preview will appear here as you type.</p>');renderMath($('livePreview'));}
-$('editor').addEventListener('input',refreshLivePreview);
-['title','type','level','course','board','subject','topic','chapter','excerpt','thumbnail','paperType','description'].forEach(id=>$(id)?.addEventListener('input',refreshLivePreview));
+$('editor').addEventListener('input',()=>{refreshLivePreview();scheduleAutoSave();});
+['title','type','level','course','board','subject','topic','chapter','excerpt','thumbnail','paperType','description'].forEach(id=>$(id)?.addEventListener('input',()=>{refreshLivePreview();scheduleAutoSave();}));
+['type','level','course','board','paperType'].forEach(id=>$(id)?.addEventListener('change',scheduleAutoSave));
 $('previewBtn').addEventListener('click',()=>{refreshLivePreview();$('livePreview').scrollIntoView({behavior:'smooth',block:'nearest'});});
 async function loadRecords(){if(!isAuthed)return;try{const d=await api('/api/content',{method:'GET'});records=d.items||[];renderRecords()}catch(err){$('contentList').textContent='Could not load content: '+err.message}}
 function renderRecords(){const el=$('contentList');if(!records.length){el.innerHTML='<p class="muted">No content yet. Create a draft to begin.</p>';return;}el.innerHTML=records.map(x=>`<article><strong>${safe(x.title)}</strong><p class="muted">${safe(x.content_type)}<br>${safe(x.study_level)} · ${safe(x.course)}${x.board_exam?' · '+safe(x.board_exam):''}${x.subject?' · '+safe(x.subject):''}${x.topic?' · '+safe(x.topic):''}</p><p><b>Status:</b> ${safe(x.status)}</p><div class="manage-actions"><button class="btn-secondary" data-edit="${safe(x.id)}">Edit</button><button class="btn-secondary" data-toggle="${safe(x.id)}">${x.status==='published'?'Unpublish':'Publish'}</button><button class="btn-secondary" data-delete="${safe(x.id)}">Delete</button></div></article>`).join('');
