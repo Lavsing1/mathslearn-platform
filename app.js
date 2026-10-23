@@ -24,7 +24,7 @@ async function api(path, options = {}) {
 function normalize(item) {
   return { id:item.id, title:item.title, type:item.content_type || item.type, paperType:item.paper_type || item.paperType || '', level:item.study_level || item.level,
     course:item.course, board:item.board_exam || item.board || '', topic:item.topic || '', subject:item.subject || '', chapter:item.chapter || item.topic || '', excerpt:item.excerpt || '', thumbnail:item.thumbnail_url || '', seo:item.seo_description || item.seo || '',
-    body:item.body_html || item.body || '', status:item.status, createdAt:item.created_at, updatedAt:item.updated_at };
+    body:item.body_html || item.body || '', status:item.status, slug:item.slug || '', url_path:item.url_path || '', createdAt:item.created_at, updatedAt:item.updated_at };
 }
 
 // Theme
@@ -169,7 +169,7 @@ function card(x) {
   const subject=x.subject||'Mathematics', chapter=x.chapter||x.topic||'';
   const image=x.thumbnail_url||x.thumbnail||'';
   const thumb=image?'<img class="content-thumb" src="'+safe(image)+'" alt="" loading="lazy" referrerpolicy="no-referrer">':'';
-  return '<article class="content-card" role="button" tabindex="0" aria-label="Open '+safe(x.title)+'" data-card-open="'+safe(x.id)+'">'+thumb+'<span class="pill '+(type==='Question Paper'?'orange':'')+'">'+safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)+'</span><div class="formula">'+safe(chapter||subject)+'</div><strong>'+safe(x.title)+'</strong><p class="muted">'+safe(x.study_level||x.level)+' · '+safe(x.course)+(x.board_exam||x.board?' · '+safe(x.board_exam||x.board):'')+' · '+safe(subject)+(chapter?' · '+safe(chapter):'')+'</p><p class="muted">'+safe(autoExcerpt(x))+'</p></article>';
+  return '<article class="content-card" role="button" tabindex="0" aria-label="Open '+safe(x.title)+'" data-card-open="'+safe(x.id)+'">'+thumb+'<span class="pill '+(type==='Question Paper'?'orange':'')+'">'+safe(type==='Question Paper'?(x.paper_type||x.paperType||'Question Paper'):type)+'</span><div class="formula">'+safe(chapter||subject)+'</div><strong>'+safe(x.title)+'</strong><p class="muted">'+safe(x.study_level||x.level)+' · '+safe(x.course)+(x.board_exam||x.board?' · '+safe(x.board_exam||x.board):'')+' · '+safe(subject)+(chapter?' · '+safe(chapter):'')+'</p><p class="muted">'+safe(autoExcerpt(x))+'</p>'+(x.url_path?'<a class="content-permalink" href="/'+safe(x.url_path.replace(/^\/+|\/+$/g, ''))+'/">Open full page ↗</a>':'')+'</article>';
 }
 function filterRender() {
   const q=lower('searchInput'), noteLevel='',noteCourse=lower('selectedCourse'),noteBoard=lower('globalBoard'),noteSubject='',noteTopic='',paperLevel='',paperCourse=lower('selectedCourse'),paperBoard=lower('globalBoard'),paperSubject='',paperTopic='',paperType='',contentType=lower('globalContentType');
@@ -186,7 +186,7 @@ function filterRender() {
   }
   document.querySelectorAll('[data-card-open]').forEach(card=>{
     const open=()=>openContent(card.dataset.cardOpen,true);
-    card.addEventListener('click',open);
+    card.addEventListener('click',e=>{if(e.target.closest('a'))return;open();});
     card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
   });
 }
