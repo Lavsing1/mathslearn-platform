@@ -10,6 +10,29 @@ $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginMe
 $('logoutBtn').addEventListener('click',async()=>{try{await api('/api/auth/logout',{method:'POST',body:'{}'})}catch{}setSession(false);records=[];toast('Signed out.');});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.admin-pane').forEach(x=>x.hidden=true);$('pane-'+b.dataset.tab).hidden=false;if(b.dataset.tab==='manage')loadRecords()}));
 document.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('click',()=>{ $('editor').focus();document.execCommand(b.dataset.cmd,false,b.dataset.val||null);}));
+
+// Insert a real HTML table without changing the existing formatting or math tools.
+$('insertTableBtn')?.addEventListener('click',()=>{
+  const rowsInput=window.prompt('How many rows? (1–12)','3');
+  if(rowsInput===null)return;
+  const colsInput=window.prompt('How many columns? (1–8)','2');
+  if(colsInput===null)return;
+  const rows=Math.max(1,Math.min(12,parseInt(rowsInput,10)||1));
+  const cols=Math.max(1,Math.min(8,parseInt(colsInput,10)||1));
+  let table='<table><tbody>';
+  for(let r=0;r<rows;r++){
+    table+='<tr>';
+    for(let c=0;c<cols;c++){
+      const tag=r===0?'th':'td';
+      table+='<'+tag+'><br></'+tag+'>';
+    }
+    table+='</tr>';
+  }
+  table+='</tbody></table><p><br></p>';
+  $('editor').focus();
+  document.execCommand('insertHTML',false,table);
+  refreshLivePreview();
+});
 $('textColor')?.addEventListener('input',e=>{ $('editor').focus();document.execCommand('styleWithCSS',false,true);document.execCommand('foreColor',false,e.target.value);});
 $('highlightColor')?.addEventListener('input',e=>{ $('editor').focus();document.execCommand('styleWithCSS',false,true);document.execCommand('hiliteColor',false,e.target.value);});
 $('textSize')?.addEventListener('change',e=>{ $('editor').focus();document.execCommand('fontSize',false,e.target.value);});
