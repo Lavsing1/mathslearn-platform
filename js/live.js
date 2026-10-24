@@ -80,6 +80,48 @@
     return a;
   }
 
+
+  /* Home page: newest content, books and real counts. Sections stay hidden
+     until there is something real to show (no sample cards). */
+  function makeHomeBook(item) {
+    const a = document.createElement("a");
+    a.className = "book-card";
+    a.href = urlFor(item);
+    a.setAttribute("data-live", "");
+    a.innerHTML = `<div class="book-cover">${esc(item.title)}</div><h4>${esc(item.title)}</h4><span>${esc(LEVEL_LABEL[item.level] || item.level)}</span>`;
+    return a;
+  }
+
+  function fillHome(items) {
+    const sections = document.querySelectorAll("[data-home-section]");
+    const statsEl = document.querySelector("[data-home-stats]");
+    if (!sections.length && !statsEl) return;
+    const notBooks = items.filter((i) => i.content_type !== "books");
+    const books = items.filter((i) => i.content_type === "books");
+    const groups = { latest: notBooks.slice(0, 6), books: books.slice(0, 5) };
+    sections.forEach((sec) => {
+      const key = sec.dataset.homeSection;
+      const list = groups[key] || [];
+      const grid = sec.querySelector("[data-home-grid]");
+      if (grid) {
+        grid.replaceChildren();
+        list.forEach((item) => grid.appendChild(key === "books" ? makeHomeBook(item) : makeCard(item)));
+      }
+      sec.hidden = list.length === 0;
+    });
+    if (statsEl) {
+      const count = (...types) => items.filter((i) => types.includes(i.content_type)).length;
+      const stats = [
+        [notBooks.length, "Resources"],
+        [count("formula-sheets"), "Formula Sheets"],
+        [count("question-papers", "solved-papers"), "Question Papers"],
+        [books.length, "Books"],
+      ].filter(([n]) => n > 0);
+      statsEl.innerHTML = stats.map(([n, label]) => `<div class="stat"><strong>${n}</strong><span>${label}</span></div>`).join("");
+      statsEl.hidden = stats.length === 0;
+    }
+  }
+
   async function loadInner() {
     let items;
     try {
@@ -96,6 +138,8 @@
     // API answered: real content replaces the demo cards.
     document.querySelectorAll("[data-card]:not([data-live])").forEach((n) => n.remove());
     document.querySelectorAll(".book-grid .book-card:not([data-live])").forEach((n) => n.remove());
+
+    fillHome(items);
 
     const listGrid = document.querySelector("[data-content-grid]");
     const bookGrid = document.querySelector(".book-grid");

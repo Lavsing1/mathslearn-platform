@@ -614,3 +614,29 @@ html.live-loading .book-grid .book-card:not([data-live]) { visibility: hidden; }
     transition: transform .3s ease, visibility 0s;
   }
 }
+
+
+/* ============================================================
+   Home page: compact hero, real stats, live sections
+   ============================================================ */
+.hero { padding: var(--space-6) 0 var(--space-6); }
+.hero h1 { font-size: clamp(1.7rem, 4vw, 2.5rem); margin-bottom: var(--space-3); }
+.hero-sub { font-size: 1rem; margin: 0 auto var(--space-4); }
+.hero-stats { margin-top: var(--space-5); gap: var(--space-6); }
+.hero-stats[hidden], .section[hidden] { display: none !important; }
+.stat strong { font-size: 1.35rem; }
+
+/* class / exam picker: one tidy strip, labels inline */
+.level-strip-compact { gap: 6px; margin-top: var(--space-4); align-items: center; }
+.level-strip-compact .chip { padding: 0.35rem 0.85rem; font-size: 0.82rem; }
+.level-strip-compact .level-group-label {
+  width: auto; margin: 0 2px 0 10px; font-size: 0.68rem; text-align: left;
+}
+.level-strip-compact .level-group-label:first-child { margin-left: 0; }
+
+.section { padding: var(--space-6) 0; }
+.home-book-grid { display: flex; flex-wrap: wrap; gap: var(--space-5); }
+.home-book-grid .book-card { width: 150px; }
+
+/* centre the paragraph inside the call-to-action band */
+.cta-band p { margin: 0 auto var(--space-5); }

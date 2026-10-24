@@ -49,7 +49,6 @@
     <!-- ========================= HERO ========================= -->
     <section class="hero">
       <div class="container hero-inner">
-        <span class="eyebrow">📘 10,000+ solved questions &amp; growing</span>
         <h1>Master Mathematics with <em>clear notes</em> &amp; solved examples</h1>
         <p class="hero-sub">Class-wise and board-wise notes, formula sheets, solved examples and question papers — built for school and competitive exam students.</p>
 
@@ -59,7 +58,7 @@
           <button type="submit" class="btn btn-primary">Search</button>
         </form>
 
-        <div class="level-strip">
+        <div class="level-strip level-strip-compact">
           <span class="level-group-label">School</span>
           <a class="chip" href="class.html?level=class-9">Class 9</a>
           <a class="chip" href="class.html?level=class-10">Class 10</a>
@@ -74,171 +73,26 @@
           <a class="chip exam" href="class.html?level=tifr">TIFR GS</a>
         </div>
 
-        <div class="hero-stats">
-          <div class="stat"><strong>500+</strong><span>Chapters</span></div>
-          <div class="stat"><strong>10k+</strong><span>Solved Questions</span></div>
-          <div class="stat"><strong>120+</strong><span>Formula Sheets</span></div>
-          <div class="stat"><strong>40+</strong><span>Books</span></div>
-        </div>
+        <div class="hero-stats" data-home-stats hidden></div>
       </div>
     </section>
 
-    <!-- ========================= BROWSE BY CLASS ========================= -->
-    <section class="section">
+    <!-- ========================= LATEST (filled from the API; hidden until there is content) ========================= -->
+    <section class="section section-alt" data-home-section="latest" hidden>
       <div class="container">
         <div class="section-head">
           <div>
-            <h2>Browse by Class</h2>
-            <p>Pick your class to find notes, formulas and question papers.</p>
-          </div>
-          <a href="notes.html" class="section-link">View all classes →</a>
-        </div>
-        <div class="category-grid">
-          <a class="category-card" href="class.html?level=class-9">
-            <span class="category-icon">9</span>
-            <h3>Class 9</h3>
-            <span>Foundation topics</span>
-          </a>
-          <a class="category-card" href="class.html?level=class-10">
-            <span class="category-icon">10</span>
-            <h3>Class 10</h3>
-            <span>Board exam ready</span>
-          </a>
-          <a class="category-card" href="class.html?level=class-11">
-            <span class="category-icon">11</span>
-            <h3>Class 11</h3>
-            <span>Algebra &amp; calculus intro</span>
-          </a>
-          <a class="category-card" href="class.html?level=class-12">
-            <span class="category-icon">12</span>
-            <h3>Class 12</h3>
-            <span>Advanced calculus &amp; vectors</span>
-          </a>
-          <a class="category-card" href="class.html?level=bsc">
-            <span class="category-icon">🎓</span>
-            <h3>B.Sc Mathematics</h3>
-            <span>Undergraduate</span>
-          </a>
-          <a class="category-card" href="class.html?level=iit-jam">
-            <span class="category-icon">⚡</span>
-            <h3>IIT JAM</h3>
-            <span>M.Sc entrance</span>
-          </a>
-          <a class="category-card" href="class.html?level=isi">
-            <span class="category-icon">Σ</span>
-            <h3>ISI Entrance</h3>
-            <span>Indian Statistical Institute</span>
-          </a>
-          <a class="category-card" href="class.html?level=cmi">
-            <span class="category-icon">∞</span>
-            <h3>CMI Entrance</h3>
-            <span>Chennai Mathematical Institute</span>
-          </a>
-          <a class="category-card" href="class.html?level=tifr">
-            <span class="category-icon">◆</span>
-            <h3>TIFR GS</h3>
-            <span>Graduate School Admission</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= LATEST NOTES ========================= -->
-    <section class="section section-alt">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <h2>Latest Notes</h2>
+            <h2>Latest Added</h2>
             <p>Freshly added and updated study material.</p>
           </div>
-          <a href="notes.html" class="section-link">Browse all notes →</a>
+          <a href="notes.html" class="section-link">Browse all →</a>
         </div>
-
-        <div class="card-grid">
-          <a class="content-card" href="content.html">
-            <div class="card-thumb">√x</div>
-            <div class="card-body">
-              <div class="card-tags"><span class="tag">Class 10</span><span class="tag alt">Notes</span></div>
-              <h3>Real Numbers — Euclid's Division Lemma</h3>
-              <p>Core concepts, solved examples and practice questions on real numbers.</p>
-              <div class="card-meta"><span>Mathematics</span><span>8 min read</span></div>
-            </div>
-          </a>
-          <a class="content-card" href="content.html">
-            <div class="card-thumb">∑</div>
-            <div class="card-body">
-              <div class="card-tags"><span class="tag">Class 11</span><span class="tag alt">Formula Sheet</span></div>
-              <h3>Trigonometric Identities — Quick Reference</h3>
-              <p>All essential trigonometric formulas in one printable sheet.</p>
-              <div class="card-meta"><span>Mathematics</span><span>5 min read</span></div>
-            </div>
-          </a>
-          <a class="content-card" href="content.html">
-            <div class="card-thumb">∫</div>
-            <div class="card-body">
-              <div class="card-tags"><span class="tag">Class 12</span><span class="tag alt">Solved Examples</span></div>
-              <h3>Integration by Parts — Worked Problems</h3>
-              <p>Step-by-step solved examples covering common integration patterns.</p>
-              <div class="card-meta"><span>Mathematics</span><span>12 min read</span></div>
-            </div>
-          </a>
-          <a class="content-card" href="content.html">
-            <div class="card-thumb">📄</div>
-            <div class="card-body">
-              <div class="card-tags"><span class="tag">Class 10</span><span class="tag alt">Question Paper</span></div>
-              <h3>CBSE Sample Paper 2026 — Mathematics</h3>
-              <p>Latest board-pattern sample paper with marking scheme.</p>
-              <div class="card-meta"><span>Mathematics</span><span>PDF</span></div>
-            </div>
-          </a>
-        </div>
+        <div class="card-grid" data-home-grid></div>
       </div>
     </section>
 
-    <!-- ========================= IMPORTANT QUESTIONS ========================= -->
-    <section class="section">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <h2>Important Questions</h2>
-            <p>High-weightage questions frequently asked in exams.</p>
-          </div>
-          <a href="notes.html?type=important-questions" class="section-link">View all →</a>
-        </div>
-        <div class="card-grid">
-          <a class="content-card" href="content.html">
-            <div class="card-thumb">λ</div>
-            <div class="card-body">
-              <div class="card-tags"><span class="tag">Class 10</span><span class="tag alt">Important</span></div>
-              <h3>Pair of Linear Equations — 20 Must-Solve Questions</h3>
-              <p>Hand-picked questions covering every exam pattern.</p>
-              <div class="card-meta"><span>Mathematics</span><span>15 min read</span></div>
-            </div>
-          </a>
-          <a class="content-card" href="content.html">
-            <div class="card-thumb">π</div>
-            <div class="card-body">
-              <div class="card-tags"><span class="tag">Class 12</span><span class="tag alt">Important</span></div>
-              <h3>Probability — Exam-Focused Problem Set</h3>
-              <p>Conditional probability and Bayes' theorem practice set.</p>
-              <div class="card-meta"><span>Mathematics</span><span>10 min read</span></div>
-            </div>
-          </a>
-          <a class="content-card" href="content.html">
-            <div class="card-thumb">θ</div>
-            <div class="card-body">
-              <div class="card-tags"><span class="tag">Class 11</span><span class="tag alt">Important</span></div>
-              <h3>Heights &amp; Distances — Application Problems</h3>
-              <p>Real-world trigonometry applications with diagrams.</p>
-              <div class="card-meta"><span>Mathematics</span><span>9 min read</span></div>
-            </div>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========================= BOOKS ========================= -->
-    <section class="section section-alt">
+    <!-- ========================= BOOKS (filled from the API; hidden until there is content) ========================= -->
+    <section class="section" data-home-section="books" hidden>
       <div class="container">
         <div class="section-head">
           <div>
@@ -247,33 +101,7 @@
           </div>
           <a href="books.html" class="section-link">Visit library →</a>
         </div>
-        <div class="book-grid">
-          <a class="book-card" href="books.html">
-            <div class="book-cover">NCERT<br/>Class 10</div>
-            <h4>NCERT Mathematics</h4>
-            <span>Class 10</span>
-          </a>
-          <a class="book-card" href="books.html">
-            <div class="book-cover">RD Sharma<br/>Class 12</div>
-            <h4>RD Sharma</h4>
-            <span>Class 12</span>
-          </a>
-          <a class="book-card" href="books.html">
-            <div class="book-cover">R.S.<br/>Aggarwal</div>
-            <h4>Quantitative Aptitude</h4>
-            <span>Competitive</span>
-          </a>
-          <a class="book-card" href="books.html">
-            <div class="book-cover">NCERT<br/>Exemplar</div>
-            <h4>NCERT Exemplar</h4>
-            <span>Class 11</span>
-          </a>
-          <a class="book-card" href="books.html">
-            <div class="book-cover">Higher<br/>Algebra</div>
-            <h4>Higher Algebra</h4>
-            <span>Reference</span>
-          </a>
-        </div>
+        <div class="home-book-grid" data-home-grid></div>
       </div>
     </section>
 
@@ -332,6 +160,7 @@
     </div>
   </footer>
 
+  <script src="js/live.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

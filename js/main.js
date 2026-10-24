@@ -182,6 +182,39 @@
     });
   }
 
+  /* ---------- Top menu: highlight the page you are really on ----------
+     "Question Papers" and "Formula Sheets" open notes.html?type=..., which
+     used to leave "Notes" underlined. Now the matching menu item is active,
+     also on a content page and when the type filter is changed. */
+  (function syncNav() {
+    const nav = document.getElementById("main-nav");
+    if (!nav) return;
+    const links = Array.from(nav.querySelectorAll("a"));
+    const find = (test) => links.find((a) => test(a.getAttribute("href") || ""));
+    const targets = {
+      "notes": find((h) => /(^|\/)notes(\.html)?$/.test(h)),
+      "question-papers": find((h) => h.includes("type=question-papers")),
+      "formula-sheets": find((h) => h.includes("type=formula-sheets")),
+      "books": find((h) => /(^|\/)books(\.html)?$/.test(h)),
+    };
+    function setActive(key) {
+      const target = targets[key] || targets.notes;
+      if (!target) return;
+      links.forEach((a) => a.classList.toggle("active", a === target));
+    }
+    const seg = location.pathname.split("/").filter(Boolean);
+    const qs = new URLSearchParams(location.search);
+    if (seg.length >= 2) {
+      setActive(seg[0]);                                   // /formula-sheets/class-10/slug/
+    } else if (/^notes(\.html)?$/.test(seg[0] || "")) {
+      setActive(qs.get("type") || "notes");                // notes.html?type=...
+      const typeFilter = document.querySelector("[data-filter-type]");
+      if (typeFilter) typeFilter.addEventListener("change", () => setActive(typeFilter.value || "notes"));
+    } else if (/^view(\.html)?$/.test(seg[0] || "") && qs.get("t")) {
+      setActive(qs.get("t"));
+    }
+  })();
+
   /* ---------- Footer year ---------- */
   document.querySelectorAll("[data-year]").forEach((el) => {
     el.textContent = new Date().getFullYear();
