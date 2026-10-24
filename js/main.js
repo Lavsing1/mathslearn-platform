@@ -87,6 +87,11 @@
     const params = new URLSearchParams(window.location.search);
     const initialQuery = params.get("q");
     if (initialQuery && searchInput) searchInput.value = initialQuery;
+    // Menu links like notes.html?type=formula-sheets pre-select that filter.
+    const initialType = params.get("type");
+    if (initialType && typeSelect && Array.from(typeSelect.options).some((o) => o.value === initialType)) {
+      typeSelect.value = initialType;
+    }
 
     function matches(card) {
       const text = card.textContent.toLowerCase();
