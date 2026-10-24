@@ -1,7 +1,0 @@
-{
-  "name": "mathslearn-cloudflare-d1",
-  "version": "2.0.0",
-  "private": true,
-  "type": "module",
-  "description": "MathsLearn frontend and Cloudflare Pages Functions backed by D1"
-}
