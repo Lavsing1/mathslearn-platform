@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | MathsLearn Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <aside class="admin-sidebar">
+    <a href="../index.html" class="brand">
+      <span class="brand-mark">M</span>
+      <span class="brand-text">Maths<span>Learn</span></span>
+    </a>
+    <nav class="admin-nav">
+      <div class="nav-heading">Create</div>
+      <a href="index.html" class="active">📊 Dashboard</a>
+      <a href="editor.html">✏️ New Content</a>
+      <div class="nav-heading">Manage &amp; Edit</div>
+      <a href="manage.html">🗂 Manage Content</a>
+      <a href="manage.html?status=published">✅ Published</a>
+      <a href="manage.html?status=draft">📝 Drafts</a>
+      <a href="manage.html?status=archived">📦 Archived</a>
+      <div class="nav-heading">By type</div>
+      <a href="manage.html?type=notes">📘 Notes</a>
+      <a href="manage.html?type=important-questions">★ Important Questions</a>
+      <a href="manage.html?type=solved-examples">✓ Solved Questions</a>
+      <a href="manage.html?type=question-papers">📄 Question Papers</a>
+      <a href="manage.html?type=formula-sheets">Σ Formula Sheets</a>
+      <a href="manage.html?type=books">📚 Books</a>
+      <div class="nav-heading">Site</div>
+      <a href="../index.html" target="_blank">🌐 View Site ↗</a>
+    </nav>
+    <button class="btn btn-ghost btn-block logout-btn" id="logout-btn">Log Out</button>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <h1>Dashboard</h1>
+      <span class="admin-user-chip"><span class="dot"></span> <span data-admin-user>…</span></span>
+    </div>
+
+    <div class="admin-body-inner">
+      <div class="stat-cards">
+        <a class="stat-card" href="manage.html"><div class="num" data-stat="total">—</div><div class="label">Total Content</div></a>
+        <a class="stat-card" href="manage.html?status=published"><div class="num" data-stat="published">—</div><div class="label">Published</div></a>
+        <a class="stat-card" href="manage.html?status=draft"><div class="num" data-stat="drafts">—</div><div class="label">Drafts</div></a>
+        <a class="stat-card" href="manage.html?type=books"><div class="num" data-stat="books">—</div><div class="label">Books</div></a>
+      </div>
+
+      <div class="quick-actions">
+        <a class="quick-card" href="editor.html"><span class="qc-icon">✏️</span><strong>Create new content</strong><span>Write a note, paper, question set or book chapter.</span></a>
+        <a class="quick-card" href="manage.html"><span class="qc-icon">🗂</span><strong>Manage &amp; edit</strong><span>Reopen anything you saved or published, edit it, unpublish or delete it.</span></a>
+        <a class="quick-card" href="../index.html" target="_blank"><span class="qc-icon">🌐</span><strong>View the site</strong><span>See what students see.</span></a>
+      </div>
+
+      <div class="page-header">
+        <h2>Recently updated</h2>
+        <a href="manage.html" class="btn btn-ghost btn-sm">Manage all →</a>
+      </div>
+      <div class="manage-list" id="recent-list"><div class="manage-empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <script src="js/admin-auth.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

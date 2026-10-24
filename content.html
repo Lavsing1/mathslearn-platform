@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Real Numbers — Euclid's Division Lemma | Class 10 Mathematics | MathsLearn</title>
+  <meta name="description" content="Understand Euclid's Division Lemma with simple explanation, formula and solved examples for Class 10 Mathematics." />
+  <link rel="canonical" href="https://mathslearn.online/notes/class-10/mathematics/real-numbers/" />
+  <meta name="theme-color" content="#4338ca" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>➗</text></svg>" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+
+  <div class="print-watermark" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-mark">M</span>
+        <span class="brand-text">Maths<span>Learn</span></span>
+      </a>
+      <nav class="main-nav" id="main-nav">
+        <a href="index.html">Home</a>
+        <a href="notes.html" class="active">Notes</a>
+        <a href="notes.html?type=question-papers">Question Papers</a>
+        <a href="notes.html?type=formula-sheets">Formula Sheets</a>
+        <a href="books.html">Books</a>
+        <a href="about.html">About</a>
+      </nav>
+      <div class="header-actions">
+        <button class="theme-toggle" aria-label="Toggle dark mode">
+          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>
+        </button>
+        <button class="nav-toggle" aria-label="Open menu" aria-expanded="false">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="index.html">Home</a><span class="sep">/</span>
+        <a href="notes.html?class=class-10">Class 10</a><span class="sep">/</span>
+        <a href="notes.html?subject=algebra">Mathematics</a><span class="sep">/</span>
+        <span>Real Numbers</span>
+      </nav>
+
+      <div class="article-layout">
+        <article>
+          <header class="article-header">
+            <div class="card-tags" style="margin-bottom: var(--space-3);">
+              <span class="tag">Class 10</span><span class="tag alt">Study Notes</span>
+            </div>
+            <h1>Real Numbers — Euclid's Division Lemma</h1>
+            <div class="article-meta">
+              <span>📘 Mathematics</span>
+              <span>🕑 8 min read</span>
+              <span>🗓️ Updated Oct 2026</span>
+            </div>
+          </header>
+
+          <div class="download-bar">
+            <p>Save this for offline reading — the download is watermarked with its source link.</p>
+            <div class="download-actions">
+              <button class="btn btn-ghost btn-sm" data-fullscreen-reader>⛶ Full Screen (PDF view)</button>
+              <button class="btn btn-ghost btn-sm" data-download-pdf>⬇ Download PDF</button>
+            </div>
+          </div>
+
+          <div class="article-body">
+            <h2>Introduction</h2>
+            <p>Euclid's Division Lemma is a fundamental result used to find the Highest Common Factor (HCF) of two positive integers. It states that for any two positive integers <em>a</em> and <em>b</em>, there exist unique integers <em>q</em> and <em>r</em> such that:</p>
+
+            <div class="formula-block">
+              a = bq + r, &nbsp; where 0 ≤ r &lt; b
+            </div>
+
+            <p>Here, <strong>a</strong> is the dividend, <strong>b</strong> is the divisor, <strong>q</strong> is the quotient and <strong>r</strong> is the remainder.</p>
+
+            <h2>Euclid's Division Algorithm</h2>
+            <p>This lemma forms the basis of an algorithm to compute the HCF of two positive integers, applied repeatedly until the remainder becomes zero:</p>
+            <ol>
+              <li>To find HCF of <em>c</em> and <em>d</em>, where c &gt; d, apply the lemma to get c = dq + r.</li>
+              <li>If r = 0, d is the HCF of c and d.</li>
+              <li>If r ≠ 0, apply the lemma to d and r, and repeat.</li>
+            </ol>
+
+            <div class="example-block">
+              <strong>Solved Example 1.</strong>
+              <p style="margin: var(--space-2) 0 0;">Find the HCF of 420 and 130 using Euclid's division algorithm.</p>
+              <div class="formula-block" style="margin: var(--space-3) 0 0;">
+                420 = 130 × 3 + 30<br/>
+                130 = 30 × 4 + 10<br/>
+                30 = 10 × 3 + 0
+              </div>
+              <p style="margin: var(--space-3) 0 0;">Since the remainder is now 0, the HCF of 420 and 130 is <strong>10</strong>.</p>
+            </div>
+
+            <button class="btn btn-ghost btn-sm" data-toggle-solution="#practice-solution">Show Solution</button>
+
+            <div class="example-block" id="practice-solution" hidden style="margin-top: var(--space-3);">
+              <strong>Practice Question.</strong>
+              <p style="margin: var(--space-2) 0 0;">Use Euclid's Division Algorithm to find the HCF of 196 and 38220.</p>
+              <div class="formula-block" style="margin: var(--space-3) 0 0;">
+                38220 = 196 × 195 + 0
+              </div>
+              <p style="margin: var(--space-3) 0 0;">Since the remainder is 0 on the first step, the HCF is <strong>196</strong>.</p>
+            </div>
+
+            <h2>Key Points to Remember</h2>
+            <ul>
+              <li>Euclid's Division Lemma applies only to positive integers.</li>
+              <li>The remainder <em>r</em> always satisfies 0 ≤ r &lt; b.</li>
+              <li>The algorithm terminates because the remainder strictly decreases at each step.</li>
+            </ul>
+
+            <small class="print-source-line" data-print-source></small>
+          </div>
+        </article>
+
+        <aside>
+          <div class="sidebar-card">
+            <h4>On this page</h4>
+            <ul class="sidebar-list">
+              <li><a href="#">Introduction</a></li>
+              <li><a href="#">Division Algorithm</a></li>
+              <li><a href="#">Solved Example</a></li>
+              <li><a href="#">Key Points</a></li>
+            </ul>
+          </div>
+          <div class="sidebar-card">
+            <h4>Related Notes</h4>
+            <ul class="sidebar-list">
+              <li><a href="content.html">Fundamental Theorem of Arithmetic <span>→</span></a></li>
+              <li><a href="content.html">Irrational Numbers — Proofs <span>→</span></a></li>
+              <li><a href="content.html">LCM &amp; HCF — Important Questions <span>→</span></a></li>
+            </ul>
+          </div>
+          <div class="sidebar-card">
+            <h4>Chapter: Real Numbers</h4>
+            <ul class="sidebar-list">
+              <li><a href="content.html">Notes <span>📘</span></a></li>
+              <li><a href="content.html">Solved Examples <span>✓</span></a></li>
+              <li><a href="content.html">Important Questions <span>★</span></a></li>
+              <li><a href="content.html">Formula Sheet <span>Σ</span></a></li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> MathsLearn.online — All rights reserved.</span>
+        <a href="notes.html">← Back to Notes</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/reader.js"></script>
+  <script>
+    (function () {
+      var b = document.querySelector("[data-fullscreen-reader]");
+      if (!b) return;
+      b.addEventListener("click", function () {
+        var body = document.querySelector(".article-body");
+        var h1 = document.querySelector(".article-header h1");
+        MathsReader.open({
+          title: h1 ? h1.textContent : document.title,
+          html: (h1 ? "<h1>" + h1.innerHTML + "</h1>" : "") + body.innerHTML
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

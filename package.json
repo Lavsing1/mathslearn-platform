@@ -1,0 +1,16 @@
+{
+  "name": "mathslearn-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MathsLearn — static site + admin + Pages Functions API on Cloudflare (D1)",
+  "scripts": {
+    "dev": "wrangler pages dev . --d1 DB=mathslearn-db",
+    "deploy": "wrangler pages deploy . --project-name mathslearn-platform"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

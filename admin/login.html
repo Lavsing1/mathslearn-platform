@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login | MathsLearn</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <div class="auth-screen">
+    <div class="auth-card">
+      <a href="../index.html" class="brand">
+        <span class="brand-mark">M</span>
+        <span class="brand-text">Maths<span>Learn</span></span>
+      </a>
+      <h1>Admin Login</h1>
+      <p class="sub">Sign in to manage notes, papers and books.</p>
+
+      <div class="form-error" id="login-error" hidden></div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="username">Username or email</label>
+          <input id="username" name="username" type="text" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="login-btn">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/admin-auth.js"></script>
+  <script>
+    document.getElementById("login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const btn = document.getElementById("login-btn");
+      const errorBox = document.getElementById("login-error");
+      errorBox.hidden = true;
+      btn.disabled = true;
+      btn.textContent = "Signing in…";
+
+      try {
+        const result = await MathsLearnAuth.login(
+          document.getElementById("username").value.trim(),
+          document.getElementById("password").value
+        );
+        if (result.ok) {
+          window.location.href = "index.html";
+        } else {
+          errorBox.textContent = result.message || "Invalid username or password.";
+          errorBox.hidden = false;
+        }
+      } catch (err) {
+        errorBox.textContent = "Could not reach the server. Check your connection and try again.";
+        errorBox.hidden = false;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Sign In";
+      }
+    });
+  </script>
+</body>
+</html>

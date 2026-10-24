@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://mathslearn.online/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://mathslearn.online/notes.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://mathslearn.online/books.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://mathslearn.online/about.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <!--
+    NOTE: This is a starter sitemap for the static pages shipped in this
+    scaffold. Once content (notes, question papers, books) is served from
+    a database/CMS, generate this file dynamically so every published
+    item is included automatically and drafts/unpublished items are
+    excluded. See README.md → "Next steps" for guidance.
+  -->
+</urlset>

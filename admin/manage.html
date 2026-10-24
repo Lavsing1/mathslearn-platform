@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manage Content | MathsLearn Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <aside class="admin-sidebar">
+    <a href="../index.html" class="brand">
+      <span class="brand-mark">M</span>
+      <span class="brand-text">Maths<span>Learn</span></span>
+    </a>
+    <nav class="admin-nav">
+      <div class="nav-heading">Create</div>
+      <a href="index.html">📊 Dashboard</a>
+      <a href="editor.html">✏️ New Content</a>
+      <div class="nav-heading">Manage &amp; Edit</div>
+      <a href="manage.html" class="active">🗂 Manage Content</a>
+      <a href="manage.html?status=published">✅ Published</a>
+      <a href="manage.html?status=draft">📝 Drafts</a>
+      <a href="manage.html?status=archived">📦 Archived</a>
+      <div class="nav-heading">By type</div>
+      <a href="manage.html?type=notes">📘 Notes</a>
+      <a href="manage.html?type=important-questions">★ Important Questions</a>
+      <a href="manage.html?type=solved-examples">✓ Solved Questions</a>
+      <a href="manage.html?type=question-papers">📄 Question Papers</a>
+      <a href="manage.html?type=formula-sheets">Σ Formula Sheets</a>
+      <a href="manage.html?type=books">📚 Books</a>
+      <div class="nav-heading">Site</div>
+      <a href="../index.html" target="_blank">🌐 View Site ↗</a>
+    </nav>
+    <button class="btn btn-ghost btn-block logout-btn" id="logout-btn">Log Out</button>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <h1>Manage Content</h1>
+      <span class="admin-user-chip"><span class="dot"></span> <span data-admin-user>…</span></span>
+    </div>
+
+    <div class="admin-body-inner">
+      <div class="page-header">
+        <h2>Edit, publish &amp; organise everything you've saved</h2>
+        <a href="editor.html" class="btn btn-primary btn-sm">+ New Content</a>
+      </div>
+
+      <div class="status-tabs" id="status-tabs" role="tablist">
+        <button type="button" class="status-tab" data-status="">All</button>
+        <button type="button" class="status-tab" data-status="published">Published</button>
+        <button type="button" class="status-tab" data-status="draft">Drafts</button>
+        <button type="button" class="status-tab" data-status="archived">Archived</button>
+      </div>
+
+      <form class="filter-bar" onsubmit="return false;">
+        <input type="search" id="f-search" placeholder="Search by title…" />
+        <select id="f-level">
+          <option value="">All Classes/Exams</option>
+          <option value="class-9">Class 9</option>
+          <option value="class-10">Class 10</option>
+          <option value="class-11">Class 11</option>
+          <option value="class-12">Class 12</option>
+          <option value="bsc">B.Sc</option>
+          <option value="iit-jam">IIT JAM</option>
+          <option value="isi">ISI</option>
+          <option value="cmi">CMI</option>
+          <option value="tifr">TIFR</option>
+        </select>
+        <select id="f-type">
+          <option value="">All Types</option>
+          <option value="notes">Study Notes</option>
+          <option value="important-questions">Important Questions</option>
+          <option value="solved-examples">Solved Questions</option>
+          <option value="question-papers">Question Papers</option>
+          <option value="solved-papers">Solved Papers</option>
+          <option value="unsolved-questions">Unsolved Questions</option>
+          <option value="formula-sheets">Formula Sheets</option>
+          <option value="books">Books</option>
+        </select>
+      </form>
+
+      <p class="manage-count" id="manage-count" aria-live="polite"></p>
+      <div class="manage-list" id="manage-list"><div class="manage-empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <script src="js/admin-auth.js"></script>
+  <script src="js/manage.js"></script>
+</body>
+</html>

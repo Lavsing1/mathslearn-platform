@@ -1,0 +1,19 @@
+# Cloudflare Pages — one URL per saved piece of content.
+#   /notes/class-10/real-numbers/   ->  view.html (js/view.js fetches it by URL)
+# Add a line here only if you add a new content type.
+/notes/:level/:slug/               /view.html  200
+/notes/:level/:slug                /view.html  200
+/important-questions/:level/:slug/ /view.html  200
+/important-questions/:level/:slug  /view.html  200
+/solved-examples/:level/:slug/     /view.html  200
+/solved-examples/:level/:slug      /view.html  200
+/question-papers/:level/:slug/     /view.html  200
+/question-papers/:level/:slug      /view.html  200
+/solved-papers/:level/:slug/       /view.html  200
+/solved-papers/:level/:slug        /view.html  200
+/unsolved-questions/:level/:slug/  /view.html  200
+/unsolved-questions/:level/:slug   /view.html  200
+/formula-sheets/:level/:slug/      /view.html  200
+/formula-sheets/:level/:slug       /view.html  200
+/books/:level/:slug/               /view.html  200
+/books/:level/:slug                /view.html  200
