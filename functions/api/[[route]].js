@@ -28,8 +28,6 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 //   D1 binding: DB  ->  mathslearn-db
 const app = new Hono();
 
-/* TEMPORARY — shows the real error text instead of a bare "Internal Server Error". Remove later. */
-app.onError((err, c) => c.json({ error: "Server error", detail: String(err && err.message || err) }, 500));
 
 const SESSION_COOKIE = "ml_session";
 const SESSION_DAYS = 7;
@@ -82,7 +80,7 @@ app.use("/api/*", async (c, next) => {
     // Run statements one by one so a problem names the exact statement that failed.
     for (const q of SCHEMA) {
       try { await c.env.DB.prepare(q).run(); }
-      catch (e) { return c.json({ error: "Database setup failed", detail: String(e.message || e), statement: q.slice(0, 90) }, 500); }
+      catch (e) { console.error("D1 setup failed:", e, q.slice(0, 90)); return c.json({ error: "Database setup failed." }, 500); }
     }
     schemaReady = true;
   }
@@ -145,14 +143,6 @@ async function requireAuth(c, next) {
  * set in Cloudflare. No sign-up, no bootstrap step. To change the
  * password, just change the secret in the dashboard and redeploy.
  * ---------------------------------------------------------- */
-/* TEMPORARY — delete this route after login works. Shows only the LENGTH of the secrets. */
-app.get("/api/auth/check", (c) => c.json({
-  emailLength: (c.env.ADMIN_EMAIL || "").length,
-  passwordLength: (c.env.ADMIN_PASSWORD || "").length,
-  sessionSecretLength: (c.env.SESSION_SECRET || "").length,
-  hasDB: !!c.env.DB,
-}));
-
 app.post("/api/auth/login", async (c) => {
   const { ADMIN_EMAIL, ADMIN_PASSWORD, SESSION_SECRET } = c.env;
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !SESSION_SECRET) {
