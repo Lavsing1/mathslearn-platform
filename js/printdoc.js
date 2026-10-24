@@ -17,9 +17,15 @@
   }
 
   // Remove everything that is only for editing / screen use.
-  function cleanHtml(html) {
+  function cleanHtml(html, title) {
     const box = document.createElement("div");
     box.innerHTML = html;
+    // The document already starts with the title — drop headings that only repeat it.
+    const norm = (t) => String(t || "").replace(/\s+/g, " ").trim().toLowerCase();
+    let n = box.firstElementChild, guard = 0;
+    while (n && /^H[1-3]$/.test(n.tagName) && norm(n.textContent) === norm(title) && guard++ < 3) {
+      const next = n.nextElementSibling; n.remove(); n = next;
+    }
     box.querySelectorAll("[data-pg]").forEach((n) => {
       n.removeAttribute("data-pg");
       n.style.removeProperty("--pg");
@@ -43,14 +49,15 @@
     .doc-body h2 { font-size: 1.25rem; margin: 1.4em 0 .5em; }
     .doc-body h3 { font-size: 1.1rem; margin: 1.2em 0 .4em; }
     .doc-body h1, .doc-body h2, .doc-body h3 { line-height: 1.3; break-after: avoid; page-break-after: avoid; }
-    .doc-body p { margin: .5em 0; orphans: 3; widows: 3; }
+    .doc-body p { margin: .55em 0; orphans: 3; widows: 3; }
+    .doc-body p:has(> strong:first-child) { margin-top: 1.1em; }
     .doc-body ul, .doc-body ol { margin: .5em 0; padding-left: 1.6em; }
     .doc-body p, .doc-body li, .doc-body tr, .doc-body img, .doc-body .katex-display,
     .doc-body .formula-block, .doc-body .example-block { break-inside: avoid; page-break-inside: avoid; }
     .doc-body img { max-width: 100%; height: auto; }
     .doc-body table { border-collapse: collapse; width: 100%; margin: .8em 0; }
     .doc-body th, .doc-body td { border: 1px solid #bbb; padding: .35em .5em; text-align: center; }
-    .doc-body .katex-display { overflow: visible; margin: .7em 0; text-align: center; }
+    .doc-body .katex-display { overflow: visible; margin: .6em 0 .8em; text-align: center; }
     .doc-body .katex-display > .katex { white-space: normal; }
     .doc-body .formula-block { border: 1px solid #c7d2fe; background: #f5f7ff; border-radius: 6px; padding: .6em 1em; margin: .8em 0; }
     .doc-body .example-block { border-left: 4px solid #0d9488; background: #f0fdfa; padding: .6em 1em; margin: .8em 0; }
@@ -68,7 +75,7 @@
 <title>${esc(title)}</title>${links}<style>${CSS}</style></head><body>
 <svg class="wm" aria-hidden="true"><defs><pattern id="wmp" width="320" height="220" patternUnits="userSpaceOnUse" patternTransform="rotate(-28)"><text x="10" y="120" font-family="sans-serif" font-size="22" fill="rgba(0,0,0,0.08)">MathsLearn.online</text></pattern></defs><rect width="100%" height="100%" fill="url(#wmp)"/></svg>
 <h1 class="doc-title">${esc(title)}</h1>${meta ? `<div class="doc-meta">${esc(meta)}</div>` : ""}
-<div class="doc-body">${cleanHtml(html)}</div>
+<div class="doc-body">${cleanHtml(html, title)}</div>
 <div class="doc-source">Downloaded from ${esc(src)} on ${esc(stamp)} — MathsLearn.online</div>
 </body></html>`;
   }

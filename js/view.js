@@ -122,6 +122,15 @@
 
     const body = $("view-body");
     body.innerHTML = sanitize(item.body_html);
+    // The page already shows the title above — drop leading headings that only repeat it.
+    {
+      const norm = (t) => String(t || "").replace(/\s+/g, " ").trim().toLowerCase();
+      const want = norm(item.title);
+      let n = body.firstElementChild, guard = 0;
+      while (n && /^H[1-3]$/.test(n.tagName) && norm(n.textContent) === want && guard++ < 3) {
+        const next = n.nextElementSibling; n.remove(); n = next;
+      }
+    }
     const words = (body.textContent || "").trim().split(/\s+/).filter(Boolean).length;
     const mins = Math.max(1, Math.round(words / 200));
     const meta = $("view-meta");
