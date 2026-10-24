@@ -323,7 +323,7 @@
   function renderPreview(attempt = 0) {
     // Copy the content, but strip editing-only attributes so the
     // preview is read-only, exactly like the student's page.
-    const clone = els.surface.cloneNode(true);
+    const clone = getCleanClone();
     clone.querySelectorAll("[contenteditable]").forEach((n) => n.removeAttribute("contenteditable"));
     // contenteditable turns spaces into non-breaking spaces; turn them
     // back so $...$ / $$...$$ delimiters are matched reliably.
@@ -378,7 +378,7 @@
   if (btnFullscreen) {
     btnFullscreen.addEventListener("click", () => {
       if (!window.MathsReader) return;
-      const clone = els.surface.cloneNode(true);
+      const clone = getCleanClone();
       clone.querySelectorAll("[contenteditable]").forEach((n) => n.removeAttribute("contenteditable"));
       window.MathsReader.open({
         title: els.title.value.trim() || "Untitled",
@@ -386,6 +386,150 @@
       });
     });
   }
+
+  /* ---------- Clean copy of the page (no runtime page spacers) ---------- */
+  function getCleanClone() {
+    const clone = els.surface.cloneNode(true);
+    clone.querySelectorAll("[data-pg]").forEach((n) => {
+      n.removeAttribute("data-pg");
+      n.style.removeProperty("--pg");
+      if (!n.getAttribute("style")) n.removeAttribute("style");
+    });
+    clone.removeAttribute("style");
+    return clone;
+  }
+
+  /* ---------- Automatic pages ----------
+     The sheet is A4 (297mm) with 15mm margins. When the next block would
+     run into the bottom margin of a page, it is moved to the top of the
+     next page, and the sheet grows by one page. This is editor-only (the
+     spacers are never saved); the student view / PDF is paginated by the
+     browser's print engine with the same A4 + 15mm settings. */
+  const MM = 96 / 25.4;
+  const PAGE_H = 297 * MM, PAGE_PAD = 15 * MM, PAGE_USABLE = PAGE_H - 2 * PAGE_PAD;
+  const narrowMQ = window.matchMedia("(max-width: 900px)");
+  const pageIndicator = document.getElementById("page-indicator");
+  let totalPages = 1;
+  let paginateTimer = null;
+  let paginating = false;
+
+  function repaginate() {
+    if (paginating) return;
+    paginating = true;
+    try {
+      const s = els.surface;
+      const kids = Array.from(s.children);
+      if (narrowMQ.matches) {
+        kids.forEach((ch) => {
+          if (ch.hasAttribute("data-pg")) {
+            ch.removeAttribute("data-pg");
+            ch.style.removeProperty("--pg");
+            if (!ch.getAttribute("style")) ch.removeAttribute("style");
+          }
+        });
+        s.style.minHeight = "";
+        totalPages = 1;
+        updatePageIndicator();
+        return;
+      }
+      for (const ch of kids) {
+        if (ch.hasAttribute("data-pg")) {
+          ch.removeAttribute("data-pg");
+          ch.style.removeProperty("--pg");
+          if (!ch.getAttribute("style")) ch.removeAttribute("style");
+        }
+        const top = ch.offsetTop;
+        const h = ch.offsetHeight;
+        if (h > PAGE_USABLE) continue; // taller than one page: let it flow across
+        const pageIdx = Math.floor(top / PAGE_H);
+        const limit = (pageIdx + 1) * PAGE_H - PAGE_PAD;
+        if (top + h > limit) {
+          const prev = ch.previousElementSibling;
+          const gap = Math.max(
+            parseFloat(getComputedStyle(ch).marginTop) || 0,
+            prev ? parseFloat(getComputedStyle(prev).marginBottom) || 0 : 0
+          );
+          ch.style.setProperty("--pg", (gap + ((pageIdx + 1) * PAGE_H + PAGE_PAD - top)) + "px");
+          ch.setAttribute("data-pg", "1");
+        }
+      }
+      const last = s.lastElementChild;
+      const lastBottom = last ? last.offsetTop + last.offsetHeight : 0;
+      totalPages = Math.max(1, Math.ceil((lastBottom + PAGE_PAD) / PAGE_H));
+      s.style.minHeight = totalPages * PAGE_H + "px";
+      updatePageIndicator();
+    } finally {
+      paginating = false;
+    }
+  }
+
+  function schedulePaginate() {
+    clearTimeout(paginateTimer);
+    paginateTimer = setTimeout(() => requestAnimationFrame(repaginate), 150);
+  }
+
+  function updatePageIndicator() {
+    if (!pageIndicator) return;
+    let page = 1;
+    const sel = window.getSelection();
+    if (!narrowMQ.matches && sel && sel.anchorNode && els.surface.contains(sel.anchorNode)) {
+      let n = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+      while (n && n.parentElement !== els.surface) n = n.parentElement;
+      if (n) page = Math.min(totalPages, Math.floor(n.offsetTop / PAGE_H) + 1);
+    }
+    pageIndicator.textContent = `Page ${page} / ${totalPages}`;
+  }
+
+  document.addEventListener("selectionchange", updatePageIndicator);
+  window.addEventListener("resize", schedulePaginate);
+  els.surface.addEventListener("load", schedulePaginate, true); // images finishing loading
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedulePaginate);
+
+  /* ---------- Full-screen editor ----------
+     The toolbar moves to a rail on the left (outside the page), the
+     Save / Preview / Exit buttons are pinned to the top of the screen. */
+  const btnFsPreview = document.getElementById("btn-fs-preview");
+  const btnFsSave = document.getElementById("btn-fs-save");
+  const isFs = () => document.body.classList.contains("editor-fs");
+
+  function syncFsPreview() {
+    if (btnFsPreview) btnFsPreview.textContent = els.previewPane.hidden ? "👁 Preview" : "✏️ Back to editing";
+  }
+  function syncFsSave() {
+    if (btnFsSave) btnFsSave.textContent = currentStatus === "published" ? "⬆ Update" : "💾 Save";
+  }
+  function enterFs() {
+    document.body.classList.add("editor-fs");
+    const de = document.documentElement;
+    if (de.requestFullscreen) de.requestFullscreen().catch(() => {});
+    syncFsPreview();
+    syncFsSave();
+    schedulePaginate();
+    els.surface.focus();
+  }
+  function exitFs() {
+    document.body.classList.remove("editor-fs");
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    schedulePaginate();
+  }
+  function toggleFs() { isFs() ? exitFs() : enterFs(); }
+
+  ["btn-fs-editor", "btn-fs-editor-footer"].forEach((id) => {
+    const b = document.getElementById(id);
+    if (b) b.addEventListener("click", toggleFs);
+  });
+  document.getElementById("btn-fs-exit").addEventListener("click", exitFs);
+  btnFsPreview.addEventListener("click", () => { els.btnTogglePreview.click(); syncFsPreview(); });
+  btnFsSave.addEventListener("click", () => {
+    document.getElementById(currentStatus === "published" ? "btn-publish" : "btn-save-draft").click();
+  });
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && isFs()) exitFs(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !isFs()) return;
+    const pop = document.getElementById("symbols-popover");
+    if (pop && !pop.hidden) return; // let the symbol picker close first
+    exitFs();
+  });
 
   /* ---------- Save status indicator ---------- */
   function setSaveStatus(state, text) {
@@ -405,7 +549,7 @@
       language: els.language.value,
       seo_title: els.seoTitle.value.trim(),
       meta_description: els.metaDesc.value.trim(),
-      body_html: els.surface.innerHTML,
+      body_html: getCleanClone().innerHTML,
       status,
     };
   }
@@ -455,6 +599,7 @@
     updateSlugPrefix();
     setStatusPill(data.status || "draft");
     updateCounts();
+    schedulePaginate();
   }
 
   function setStatusPill(status) {
@@ -466,6 +611,7 @@
     document.getElementById("btn-unpublish").hidden = !live;
     document.getElementById("btn-save-draft").hidden = live;
     updateLiveUrl();
+    syncFsSave();
   }
 
   /* ---------- Save to server ---------- */
@@ -524,6 +670,7 @@
   let autosaveTimer = null;
   function scheduleAutosave() {
     updateCounts();
+    schedulePaginate();
     refreshPreviewIfOpen();
     backupLocally();
     clearTimeout(autosaveTimer);

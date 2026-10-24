@@ -274,3 +274,86 @@ a.stat-card:hover { border-color: var(--color-primary); transform: translateY(-1
   .editor-slug input { min-width: 0; flex: 1 1 140px; }
   .editor-footer-bar { gap: var(--space-3); }
 }
+
+
+/* ============================================================
+   Automatic pages + full-screen editor
+   ============================================================ */
+
+/* A4 pages: the sheet shows a band at every page end. When a page is
+   full, js/editor.js moves the next block below the band (data-pg), so
+   the following page "opens" by itself. These spacers are runtime
+   only — they are stripped before saving. */
+.editor-surface { position: relative; }
+.editor-surface > [data-pg] { margin-top: var(--pg) !important; }
+@media (min-width: 901px) {
+  .editor-surface {
+    background-image: repeating-linear-gradient(to bottom,
+      transparent 0, transparent calc(297mm - 7px),
+      #cfd5df calc(297mm - 7px), #cfd5df calc(297mm - 6px),
+      #e6e9ef calc(297mm - 6px), #e6e9ef 297mm);
+  }
+}
+
+.fs-only { display: none; }
+.fs-actions { align-items: center; gap: var(--space-2); }
+
+/* ---- Full-screen editor: toolbar moves to a side rail, page stays clean ---- */
+body.editor-fs { overflow: hidden; }
+body.editor-fs .admin-sidebar { display: none; }
+body.editor-fs .admin-main { width: 100%; }
+body.editor-fs .fs-only { display: flex; }
+body.editor-fs .admin-topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 48px; z-index: 200;
+  padding-inline: var(--space-4); gap: var(--space-3);
+}
+body.editor-fs .admin-topbar h1 { font-size: 0.95rem; max-width: 36vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body.editor-fs .fs-actions { margin-left: auto; }
+body.editor-fs .admin-body-inner { padding: 0; max-width: none; }
+body.editor-fs .editor-layout { display: block; }
+body.editor-fs .editor-layout > div:nth-child(2),
+body.editor-fs .editor-title-input,
+body.editor-fs .editor-slug,
+body.editor-fs .editor-url { display: none !important; }
+
+body.editor-fs .editor-main-col {
+  position: fixed; top: 48px; left: 0; right: 0; bottom: 0; overflow-y: auto;
+  background: var(--color-surface-alt); padding: var(--space-4) var(--space-4) 64px 172px;
+}
+body.editor-fs .editor-surface-wrap { background: transparent; padding: 0; }
+
+body.editor-fs .editor-toolbar {
+  position: fixed; top: 48px; left: 0; bottom: 0; width: 156px; z-index: 150;
+  flex-direction: row; flex-wrap: wrap; align-content: flex-start; gap: 4px;
+  overflow-y: auto; margin: 0; padding: var(--space-2);
+  border-radius: 0; border-width: 0 1px 0 0; background: var(--color-surface);
+}
+body.editor-fs .editor-toolbar .tb-sep { width: 100%; height: 1px; margin: 3px 0; }
+body.editor-fs .tb-btn.wide { min-width: 34px; padding: 0 0.45rem; }
+body.editor-fs .tb-group { position: static; }
+body.editor-fs .tb-popover {
+  position: fixed; left: 164px; top: 60px; z-index: 300;
+  max-height: calc(100vh - 80px); overflow-y: auto;
+}
+
+body.editor-fs .editor-footer-bar {
+  position: fixed; right: 16px; bottom: 10px; z-index: 160; margin: 0;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 999px; padding: 4px 14px; box-shadow: var(--shadow-md);
+}
+body.editor-fs .editor-footer-bar .footer-actions { display: none !important; }
+
+/* Preview becomes a full-screen overlay under the pinned top bar */
+body.editor-fs .preview-pane {
+  position: fixed; top: 48px; left: 0; right: 0; bottom: 0; z-index: 180; margin: 0;
+  overflow: auto; background: var(--color-surface-alt); padding: var(--space-4);
+}
+body.editor-fs .preview-pane[hidden] { display: none; }
+
+@media (max-width: 900px) {
+  body.editor-fs .editor-main-col { padding-left: var(--space-3); padding-right: var(--space-3); padding-bottom: 120px; }
+  body.editor-fs .editor-toolbar { top: auto; bottom: 0; left: 0; right: 0; width: auto; height: auto; max-height: 96px; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; border-width: 1px 0 0 0; }
+  body.editor-fs .editor-toolbar .tb-sep { width: 1px; height: 28px; margin: 0 3px; }
+  body.editor-fs .tb-popover { left: 8px; top: auto; bottom: 104px; }
+  body.editor-fs .editor-footer-bar { bottom: 104px; }
+}

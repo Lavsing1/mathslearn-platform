@@ -47,13 +47,19 @@
     <div class="admin-topbar">
       <h1 id="editor-topbar-title">New Content</h1>
       <span class="save-status" id="save-status"><span class="dot"></span><span id="save-status-text">Not saved yet</span></span>
+      <!-- Only visible in full-screen editor mode: pinned to the top of the screen -->
+      <div class="fs-only fs-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-fs-save">💾 Save</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-fs-preview">👁 Preview</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-fs-exit">✕ Exit</button>
+      </div>
     </div>
 
     <div class="admin-body-inner">
       <div class="editor-layout">
 
         <!-- ===================== Main editing column ===================== -->
-        <div>
+        <div class="editor-main-col">
           <input type="text" class="editor-title-input" id="f-title" placeholder="Enter a title — e.g. Real Numbers: Euclid's Division Lemma" />
           <div class="editor-slug">
             <span>mathslearn.online/<span id="slug-prefix">notes/class-10</span>/</span>
@@ -114,6 +120,8 @@
             <div class="tb-sep"></div>
             <button type="button" class="tb-btn" id="btn-undo" title="Undo">↶</button>
             <button type="button" class="tb-btn" id="btn-redo" title="Redo">↷</button>
+            <div class="tb-sep"></div>
+            <button type="button" class="tb-btn wide" id="btn-fs-editor" title="Full screen editor (Esc to exit)">⛶ Full</button>
           </div>
 
           <div class="editor-surface-wrap">
@@ -123,9 +131,10 @@
           </div>
 
           <div class="editor-footer-bar">
-            <span><span id="word-count">0</span> words · <span id="char-count">0</span> characters</span>
-            <span style="display:flex;gap:8px;">
-              <button type="button" class="btn btn-ghost btn-sm" id="btn-fullscreen-preview">⛶ Full Screen (A4)</button>
+            <span><span id="word-count">0</span> words · <span id="char-count">0</span> characters · <span id="page-indicator">Page 1 / 1</span></span>
+            <span class="footer-actions" style="display:flex;gap:8px;">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-fs-editor-footer">⛶ Full Screen Editor</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-fullscreen-preview">📖 Reader View (A4)</button>
               <button type="button" class="btn btn-ghost btn-sm" id="btn-toggle-preview">Show Preview</button>
             </span>
           </div>
