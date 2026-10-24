@@ -351,9 +351,20 @@ body.editor-fs .preview-pane {
 body.editor-fs .preview-pane[hidden] { display: none; }
 
 @media (max-width: 900px) {
-  body.editor-fs .editor-main-col { padding-left: var(--space-3); padding-right: var(--space-3); padding-bottom: 120px; }
-  body.editor-fs .editor-toolbar { top: auto; bottom: 0; left: 0; right: 0; width: auto; height: auto; max-height: 96px; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; border-width: 1px 0 0 0; }
+  /* Phone: tools sit in a scrollable strip UNDER the pinned top bar, so the
+     on-screen keyboard can never cover them. */
+  body.editor-fs .editor-main-col { top: 100px; padding: var(--space-2) var(--space-2) 72px; }
+  body.editor-fs .editor-toolbar {
+    top: 48px; left: 0; right: 0; bottom: auto; width: auto; height: 52px;
+    flex-wrap: nowrap; align-items: center; overflow-x: auto; overflow-y: hidden;
+    border-width: 0 0 1px 0;
+  }
+  body.editor-fs .editor-toolbar > * { flex: none; }
   body.editor-fs .editor-toolbar .tb-sep { width: 1px; height: 28px; margin: 0 3px; }
-  body.editor-fs .tb-popover { left: 8px; top: auto; bottom: 104px; }
-  body.editor-fs .editor-footer-bar { bottom: 104px; }
+  body.editor-fs .tb-popover { left: 8px; right: 8px; top: 104px; min-width: 0; }
+  body.editor-fs .preview-pane { top: 48px; }
+  body.editor-fs .editor-footer-bar { right: 8px; bottom: 8px; font-size: 0.72rem; }
+  body.editor-fs .admin-topbar h1 { max-width: 22vw; }
+  body.editor-fs .save-status { display: none; }
+  body.editor-fs .fs-actions .btn { padding-inline: 0.6rem; }
 }
