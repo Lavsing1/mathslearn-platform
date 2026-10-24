@@ -28,6 +28,9 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 //   D1 binding: DB  ->  mathslearn-db
 const app = new Hono();
 
+/* TEMPORARY — shows the real error text instead of a bare "Internal Server Error". Remove later. */
+app.onError((err, c) => c.json({ error: "Server error", detail: String(err && err.message || err) }, 500));
+
 const SESSION_COOKIE = "ml_session";
 const SESSION_DAYS = 7;
 const CONTENT_TYPES = [
@@ -76,7 +79,11 @@ let schemaReady = false;
 app.use("/api/*", async (c, next) => {
   if (!c.env.DB) return c.json({ error: "D1 binding 'DB' is missing in Pages settings." }, 500);
   if (!schemaReady) {
-    await c.env.DB.batch(SCHEMA.map((q) => c.env.DB.prepare(q)));
+    // Run statements one by one so a problem names the exact statement that failed.
+    for (const q of SCHEMA) {
+      try { await c.env.DB.prepare(q).run(); }
+      catch (e) { return c.json({ error: "Database setup failed", detail: String(e.message || e), statement: q.slice(0, 90) }, 500); }
+    }
     schemaReady = true;
   }
   await next();
