@@ -80,7 +80,7 @@
     return a;
   }
 
-  async function load() {
+  async function loadInner() {
     let items;
     try {
       const res = await fetch("/api/public/content?limit=200", { credentials: "omit" });
@@ -111,6 +111,11 @@
       if (typed) typed.appendChild(makeCard(item));
       else if (listGrid) listGrid.appendChild(makeCard(item));
     });
+  }
+
+  async function load() {
+    try { await loadInner(); }
+    finally { document.documentElement.classList.remove("live-loading"); }
   }
 
   window.MathsLive = { urlFor, TYPE_LABEL, LEVEL_LABEL, ready: load() };

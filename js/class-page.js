@@ -62,7 +62,6 @@
   }
 
   filterGrids();
-  if (window.MathsLive) window.MathsLive.ready.then(filterGrids);
 
   /* ---------- Tabs ---------- */
   const tabs = Array.from(document.querySelectorAll("[role='tab']"));
@@ -97,4 +96,19 @@
   const requestedTab = params.get("tab");
   const requestedTabEl = requestedTab && document.getElementById(`tab-${requestedTab}`);
   activate(requestedTabEl ? requestedTabEl.id : (tabs[0] && tabs[0].id));
+
+  // Once the real content is in, open the first tab that actually has something
+  // (unless a tab was asked for in the URL) — so a published Formula Sheet is
+  // visible straight away instead of hiding behind an empty "Notes" tab.
+  if (window.MathsLive) {
+    window.MathsLive.ready.then(() => {
+      filterGrids();
+      if (requestedTabEl) return;
+      const withContent = tabs.find((tab) => {
+        const grid = document.querySelector(`[data-type-grid="${tab.dataset.tab}"]`);
+        return grid && Array.from(grid.querySelectorAll("[data-card]")).some((c) => c.style.display !== "none");
+      });
+      if (withContent) activate(withContent.id);
+    });
+  }
 })();

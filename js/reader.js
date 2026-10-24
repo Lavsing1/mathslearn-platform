@@ -22,10 +22,41 @@
     sheet.style.zoom = scale < 1 ? String(scale) : "";
   }
 
+
+  /* ---------- A4 pages: no block is cut by a page end ----------
+     Each block that would run into the bottom margin of a page is moved to
+     the top of the next page (screen only; printing is paginated by the
+     browser from a clean copy, see js/printdoc.js). */
+  const PAGE_H = 297 * MM_TO_PX, PAGE_PAD = 15 * MM_TO_PX, PAGE_USABLE = PAGE_H - 2 * PAGE_PAD;
+  function paginate() {
+    if (!sheet) return;
+    const kids = Array.from(sheet.children);
+    kids.forEach((ch) => {
+      if (ch.hasAttribute("data-pg")) { ch.removeAttribute("data-pg"); ch.style.removeProperty("--pg"); if (!ch.getAttribute("style")) ch.removeAttribute("style"); }
+    });
+    if (sheet.style.zoom) { sheet.style.minHeight = ""; return; } // small screens: continuous sheet
+    for (const ch of kids) {
+      if (ch.hasAttribute("data-pg")) { ch.removeAttribute("data-pg"); ch.style.removeProperty("--pg"); }
+      const top = ch.offsetTop, h = ch.offsetHeight;
+      if (h > PAGE_USABLE) continue;
+      const idx = Math.floor(top / PAGE_H);
+      if (top + h > (idx + 1) * PAGE_H - PAGE_PAD) {
+        const prev = ch.previousElementSibling;
+        const gap = Math.max(parseFloat(getComputedStyle(ch).marginTop) || 0, prev ? parseFloat(getComputedStyle(prev).marginBottom) || 0 : 0);
+        ch.style.setProperty("--pg", (gap + (idx + 1) * PAGE_H + PAGE_PAD - top) + "px");
+        ch.setAttribute("data-pg", "1");
+      }
+    }
+    const last = sheet.lastElementChild;
+    const bottom = last ? last.offsetTop + last.offsetHeight : 0;
+    sheet.style.minHeight = Math.max(1, Math.ceil((bottom + PAGE_PAD) / PAGE_H)) * PAGE_H + "px";
+  }
+
   function close() {
     if (!overlay) return;
     document.removeEventListener("keydown", onKey);
     window.removeEventListener("resize", fitToScreen);
+    window.removeEventListener("resize", paginate);
     document.removeEventListener("fullscreenchange", onFsChange);
     if (document.fullscreenElement && document.exitFullscreen) {
       document.exitFullscreen().catch(() => {});
@@ -62,7 +93,10 @@
     printBtn.type = "button";
     printBtn.className = "reader-btn";
     printBtn.textContent = "⬇ Download PDF";
-    printBtn.addEventListener("click", () => window.print());
+    printBtn.addEventListener("click", () => {
+      if (window.MathsPrint) window.MathsPrint.print({ title: title || "Document", html: sheet ? sheet.innerHTML : html });
+      else window.print();
+    });
     const exitBtn = document.createElement("button");
     exitBtn.type = "button";
     exitBtn.className = "reader-btn reader-exit";
@@ -99,12 +133,17 @@
             { left: "$", right: "$", display: false },
           ],
           throwOnError: false,
+          macros: { "\\cosec": "\\csc" }, // \cosec is the usual Indian-textbook spelling of \csc
+          strict: false,
         });
       } catch (e) { /* leave raw text */ }
     }
 
     fitToScreen();
+    paginate();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(paginate);
     window.addEventListener("resize", fitToScreen);
+    window.addEventListener("resize", paginate);
     document.addEventListener("keydown", onKey);
     exitBtn.focus();
 

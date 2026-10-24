@@ -89,6 +89,8 @@
         window.renderMathInElement(el, {
           delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }],
           throwOnError: false,
+          macros: { "\\cosec": "\\csc" }, // \cosec is the usual Indian-textbook spelling of \csc
+          strict: false,
         });
       } catch (e) { /* keep raw text */ }
     } else if (attempt < 40) {

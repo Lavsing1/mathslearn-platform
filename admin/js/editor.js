@@ -350,6 +350,8 @@
       window.renderMathInElement(els.previewContent, {
         delimiters: MATH_DELIMITERS,
         throwOnError: false,
+        macros: { "\\cosec": "\\csc" }, // \cosec is the usual Indian-textbook spelling of \csc
+        strict: false,
         ignoredTags: ["script", "noscript", "style", "textarea", "option"], // allow math inside <code> too
       });
     } catch (e) {
@@ -622,6 +624,8 @@
 
     if (!payload.title) {
       setSaveStatus("error", "Add a title before saving");
+      if (isFs()) exitFs();
+      els.title.focus();
       return;
     }
     if (user.offline) {
@@ -699,6 +703,8 @@
   document.getElementById("btn-publish").addEventListener("click", async () => {
     if (!els.title.value.trim() || !els.slug.value.trim()) {
       setSaveStatus("error", "Title and URL slug are required before publishing");
+      if (isFs()) exitFs(); // title / slug boxes are hidden in full-screen mode
+      (els.title.value.trim() ? els.slug : els.title).focus();
       return;
     }
     await saveToServer("published");

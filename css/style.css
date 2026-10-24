@@ -542,8 +542,11 @@ mark { background: #fef08a; color: inherit; padding: 0.05em 0.15em; border-radiu
   padding: 15mm; border: none; border-radius: 2px;
   background-color: #fff; color: #1b1f2a;
   box-shadow: 0 6px 24px rgba(0,0,0,.45);
-  background-image: repeating-linear-gradient(
-    to bottom, transparent 0, transparent calc(297mm - 2px), rgba(220,38,38,.35) calc(297mm - 2px), rgba(220,38,38,.35) 297mm);
+  position: relative;
+  background-image: repeating-linear-gradient(to bottom,
+    transparent 0, transparent calc(297mm - 7px),
+    #cfd5df calc(297mm - 7px), #cfd5df calc(297mm - 6px),
+    #e6e9ef calc(297mm - 6px), #e6e9ef 297mm);
   overflow-wrap: anywhere;
 }
 .reader-sheet .katex-display { overflow-x: auto; overflow-y: hidden; }
@@ -561,6 +564,14 @@ mark { background: #fef08a; color: inherit; padding: 0.05em 0.15em; border-radiu
   .reader-sheet { width: auto; min-height: 0; padding: 0; box-shadow: none; background-image: none; zoom: 1 !important; }
   html { overflow: visible !important; }
 }
+
+@media screen {
+  .reader-sheet > [data-pg] { margin-top: var(--pg) !important; }
+}
+/* Public pages: hide the built-in sample cards until the real list has loaded
+   (no flash of demo cards that then disappear). */
+html.live-loading [data-card]:not([data-live]),
+html.live-loading .book-grid .book-card:not([data-live]) { visibility: hidden; }
 
 /* ---------- Mobile: both actions (Full Screen + Download) always visible ---------- */
 .download-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }

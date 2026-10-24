@@ -164,6 +164,19 @@
 
     window.addEventListener("beforeprint", stampWatermark);
     downloadBtn.addEventListener("click", () => {
+      const body = document.getElementById("view-body");
+      if (window.MathsPrint && body) {
+        const t = document.getElementById("view-title");
+        const m = document.getElementById("view-meta");
+        const canonical = document.querySelector("link[rel='canonical']");
+        window.MathsPrint.print({
+          title: (t && t.textContent.trim()) || document.title,
+          meta: m ? m.textContent.replace(/\s+/g, " ").trim() : "",
+          html: body.innerHTML,
+          source: (canonical && canonical.href) || window.location.href,
+        });
+        return;
+      }
       stampWatermark();
       window.print();
     });
