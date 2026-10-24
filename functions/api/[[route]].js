@@ -138,6 +138,14 @@ async function requireAuth(c, next) {
  * set in Cloudflare. No sign-up, no bootstrap step. To change the
  * password, just change the secret in the dashboard and redeploy.
  * ---------------------------------------------------------- */
+/* TEMPORARY — delete this route after login works. Shows only the LENGTH of the secrets. */
+app.get("/api/auth/check", (c) => c.json({
+  emailLength: (c.env.ADMIN_EMAIL || "").length,
+  passwordLength: (c.env.ADMIN_PASSWORD || "").length,
+  sessionSecretLength: (c.env.SESSION_SECRET || "").length,
+  hasDB: !!c.env.DB,
+}));
+
 app.post("/api/auth/login", async (c) => {
   const { ADMIN_EMAIL, ADMIN_PASSWORD, SESSION_SECRET } = c.env;
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !SESSION_SECRET) {
@@ -148,7 +156,7 @@ app.post("/api/auth/login", async (c) => {
 
   const [uOk, pOk] = await Promise.all([
     sha256Hex(username.trim().toLowerCase()).then(async (h) => safeEqual(h, await sha256Hex(ADMIN_EMAIL.trim().toLowerCase()))),
-    sha256Hex(password).then(async (h) => safeEqual(h, await sha256Hex(ADMIN_PASSWORD))),
+    sha256Hex(password).then(async (h) => safeEqual(h, await sha256Hex(ADMIN_PASSWORD.trim()))),
   ]);
   if (!uOk || !pOk) return c.json({ error: "Invalid username or password." }, 401);
 
