@@ -111,6 +111,7 @@
     sheet = document.createElement("div");
     sheet.className = "reader-sheet article-body";
     sheet.innerHTML = html;
+    if (window.MathsShapes) window.MathsShapes.render(sheet);
     // Read-only, and no interactive-only controls inside the sheet.
     sheet.querySelectorAll("[contenteditable]").forEach((n) => n.removeAttribute("contenteditable"));
     sheet.querySelectorAll("button, [data-print-source]").forEach((n) => {

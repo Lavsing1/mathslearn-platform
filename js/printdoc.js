@@ -61,6 +61,13 @@
     .doc-body .katex-display > .katex { white-space: normal; }
     .doc-body .formula-block { border: 1px solid #c7d2fe; background: #f5f7ff; border-radius: 6px; padding: .6em 1em; margin: .8em 0; }
     .doc-body .example-block { border-left: 4px solid #0d9488; background: #f0fdfa; padding: .6em 1em; margin: .8em 0; }
+    .shape-figure { margin: .9em auto; text-align: center; break-inside: avoid; page-break-inside: avoid; }
+    .shape-figure svg { max-width: 100%; height: auto; color: #111; }
+    .shape-figure .s-shape, .shape-figure .s-line { fill: none; stroke: currentColor; stroke-width: 0.05; }
+    .shape-figure .s-fill { fill: rgba(79,70,229,0.08); }
+    .shape-figure .s-text { fill: currentColor; font: 0.5px sans-serif; }
+    .shape-figure figcaption { font-size: .8rem; color: #555; }
+    .shape-error { display: none; }
     .doc-source { margin-top: 1.8em; padding-top: .5em; border-top: 1px dashed #999; font-size: .72rem; color: #555; }
     .wm { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
   `;

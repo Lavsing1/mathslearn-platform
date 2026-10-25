@@ -122,6 +122,7 @@
 
     const body = $("view-body");
     body.innerHTML = sanitize(item.body_html);
+    if (window.MathsShapes) window.MathsShapes.render(body);   // show.circle(radius=5) -> drawing
     // The page already shows the title above — drop leading headings that only repeat it.
     {
       const norm = (t) => String(t || "").replace(/\s+/g, " ").trim().toLowerCase();

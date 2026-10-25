@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Content Editor | MathsLearn Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <!-- KaTeX: renders $...$ / $$...$$ math in the live preview pane.
+       Pinned version, loaded from jsDelivr per this app's CSP-friendly
+       script policy. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body class="admin-body">
+
+  <aside class="admin-sidebar">
+    <a href="../index.html" class="brand">
+      <span class="brand-mark">M</span>
+      <span class="brand-text">Maths<span>Learn</span></span>
+    </a>
+    <nav class="admin-nav">
+      <div class="nav-heading">Create</div>
+      <a href="index.html">📊 Dashboard</a>
+      <a href="editor.html" class="active">✏️ New Content</a>
+      <div class="nav-heading">Manage &amp; Edit</div>
+      <a href="manage.html">🗂 Manage Content</a>
+      <a href="manage.html?status=published">✅ Published</a>
+      <a href="manage.html?status=draft">📝 Drafts</a>
+      <a href="manage.html?status=archived">📦 Archived</a>
+      <div class="nav-heading">By type</div>
+      <a href="manage.html?type=notes">📘 Notes</a>
+      <a href="manage.html?type=important-questions">★ Important Questions</a>
+      <a href="manage.html?type=solved-examples">✓ Solved Questions</a>
+      <a href="manage.html?type=question-papers">📄 Question Papers</a>
+      <a href="manage.html?type=formula-sheets">Σ Formula Sheets</a>
+      <a href="manage.html?type=books">📚 Books</a>
+      <div class="nav-heading">Site</div>
+      <a href="../index.html" target="_blank">🌐 View Site ↗</a>
+    </nav>
+    <button class="btn btn-ghost btn-block logout-btn" id="logout-btn">Log Out</button>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <h1 id="editor-topbar-title">New Content</h1>
+      <span class="save-status" id="save-status"><span class="dot"></span><span id="save-status-text">Not saved yet</span></span>
+      <!-- Only visible in full-screen editor mode: pinned to the top of the screen -->
+      <div class="fs-only fs-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-fs-save">💾 Save</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-fs-preview">👁 Preview</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-fs-exit">✕ Exit</button>
+      </div>
+    </div>
+
+    <div class="admin-body-inner">
+      <div class="editor-layout">
+
+        <!-- ===================== Main editing column ===================== -->
+        <div class="editor-main-col">
+          <input type="text" class="editor-title-input" id="f-title" placeholder="Enter a title — e.g. Real Numbers: Euclid's Division Lemma" />
+          <div class="editor-slug">
+            <span>mathslearn.online/<span id="slug-prefix">notes/class-10</span>/</span>
+            <input type="text" id="f-slug" placeholder="auto-generated-slug" />
+            <span>/</span>
+          </div>
+          <div class="editor-url" id="editor-url" hidden>
+            <span id="editor-url-label">🔗 Live link:</span>
+            <a id="editor-url-link" href="#" target="_blank" rel="noopener"></a>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-copy-url">Copy link</button>
+          </div>
+
+          <div class="editor-toolbar" id="editor-toolbar">
+            <button type="button" class="tb-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+            <button type="button" class="tb-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+            <button type="button" class="tb-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+            <button type="button" class="tb-btn" id="btn-clear-format" title="Clear formatting">Tx</button>
+            <div class="tb-sep"></div>
+            <button type="button" class="tb-btn wide" data-block="h2" title="Heading 2">H2</button>
+            <button type="button" class="tb-btn wide" data-block="h3" title="Heading 3">H3</button>
+            <button type="button" class="tb-btn wide" data-block="p" title="Paragraph">¶</button>
+            <input type="number" class="tb-size-input" id="f-size-num" list="size-presets" min="6" max="120" step="1" placeholder="pt"
+                   title="Text size in points. Type any number and press Enter (select the text first, or set it before you type)." />
+            <datalist id="size-presets">
+              <option value="8"></option><option value="10"></option><option value="11"></option><option value="12"></option>
+              <option value="14"></option><option value="16"></option><option value="18"></option><option value="20"></option>
+              <option value="24"></option><option value="28"></option><option value="32"></option><option value="36"></option>
+              <option value="48"></option><option value="60"></option><option value="72"></option>
+            </datalist>
+            <div class="tb-sep"></div>
+            <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="Bullet list">•≡</button>
+            <button type="button" class="tb-btn" data-cmd="insertOrderedList" title="Numbered list">1≡</button>
+            <button type="button" class="tb-btn" data-cmd="subscript" title="Subscript">X₂</button>
+            <button type="button" class="tb-btn" data-cmd="superscript" title="Superscript">X²</button>
+            <div class="tb-sep"></div>
+            <label class="tb-color" title="Text color" style="display:flex;align-items:center;justify-content:center;">
+              <input type="color" id="f-text-color" value="#dc2626" style="width:0;height:0;opacity:0;position:absolute;" />
+              <span style="pointer-events:none; font-weight:800;">A</span>
+            </label>
+            <label class="tb-color" title="Highlight color" style="display:flex;align-items:center;justify-content:center;">
+              <input type="color" id="f-highlight-color" value="#fef08a" style="width:0;height:0;opacity:0;position:absolute;" />
+              <span style="pointer-events:none;">🖊️</span>
+            </label>
+            <div class="tb-sep"></div>
+            <button type="button" class="tb-btn wide" id="btn-math-inline" title="Insert inline math">√x</button>
+            <button type="button" class="tb-btn wide" id="btn-math-block" title="Insert block equation">Σ=</button>
+            <button type="button" class="tb-btn wide" id="btn-fraction" title="Insert a fraction">a/b</button>
+            <div class="tb-group">
+              <button type="button" class="tb-btn wide" id="btn-symbols-toggle" title="Insert a symbol">π Ω</button>
+              <div class="tb-popover" id="symbols-popover" hidden>
+                <div class="symbol-grid" id="symbol-grid"></div>
+              </div>
+            </div>
+            <div class="tb-sep"></div>
+            <button type="button" class="tb-btn wide" id="btn-table" title="Insert table">⊞ Table</button>
+            <button type="button" class="tb-btn wide" id="btn-formula-block" title="Insert formula box">Formula</button>
+            <button type="button" class="tb-btn wide" id="btn-example-block" title="Insert solved-example box">Example</button>
+            <select class="tb-font-size" id="shape-insert" title="Insert a shape — you can also just type  show.circle(radius=5)">
+              <option value="">△ Shape…</option>
+              <option value="circle">Circle</option>
+              <option value="triangle">Triangle</option>
+              <option value="right_triangle">Right triangle</option>
+              <option value="rectangle">Rectangle</option>
+              <option value="square">Square</option>
+              <option value="line">Line</option>
+              <option value="angle">Angle</option>
+              <option value="polygon">Polygon</option>
+            </select>
+            <button type="button" class="tb-btn" id="btn-link" title="Insert link">🔗</button>
+            <div class="tb-sep"></div>
+            <button type="button" class="tb-btn" id="btn-undo" title="Undo">↶</button>
+            <button type="button" class="tb-btn" id="btn-redo" title="Redo">↷</button>
+            <div class="tb-sep"></div>
+            <button type="button" class="tb-btn wide" id="btn-fs-editor" title="Full screen editor (Esc to exit)">⛶ Full</button>
+          </div>
+
+          <div class="editor-surface-wrap">
+            <div class="editor-surface" id="editor-surface" contenteditable="true" spellcheck="true">
+              <p>Start writing here — write as much as you like, a notes page, a full question paper or a whole book chapter; this surface is sized like an A4 sheet so it maps cleanly onto the PDF a student downloads. Type <code>$x^2$</code> for inline math or <code>$$...$$</code> on its own line for a block equation, then click "Preview" to see it rendered.</p>
+            </div>
+          </div>
+
+          <div class="editor-footer-bar">
+            <span><span id="word-count">0</span> words · <span id="char-count">0</span> characters · <span id="page-indicator">Page 1 / 1</span> <span id="problem-badge" class="problem-badge" role="button" tabindex="0" title="Click to jump to the next problem" hidden></span></span>
+            <span class="footer-actions" style="display:flex;gap:8px;">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-fs-editor-footer">⛶ Full Screen Editor</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-fullscreen-preview">📖 Reader View (A4)</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-toggle-preview">Show Preview</button>
+            </span>
+          </div>
+
+          <div class="preview-pane" id="preview-pane" hidden>
+            <h4 style="font-size:0.85rem; text-transform:uppercase; letter-spacing:.04em; color:var(--color-text-faint);">Live Preview — exactly how students will see this</h4>
+            <div class="article-body" id="preview-content"></div>
+          </div>
+        </div>
+
+        <!-- ===================== Metadata sidebar ===================== -->
+        <div>
+          <div class="editor-meta-card" style="margin-bottom: var(--space-5);">
+            <h4>Publish</h4>
+            <div class="field">
+              <label>Status</label>
+              <span class="status-badge draft" id="status-pill">Draft</span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-block" id="btn-save-draft" style="margin-bottom: var(--space-2);">Save Draft</button>
+            <button type="button" class="btn btn-primary btn-block" id="btn-publish">Publish</button>
+            <button type="button" class="btn btn-ghost btn-block" id="btn-unpublish" style="margin-top: var(--space-2);" hidden>Unpublish (back to draft)</button>
+            <a href="manage.html" class="btn btn-ghost btn-block" style="margin-top: var(--space-2);">🗂 Manage all content</a>
+          </div>
+
+          <div class="editor-meta-card" style="margin-bottom: var(--space-5);">
+            <h4>Classification</h4>
+            <div class="field">
+              <label for="f-type">Content Type</label>
+              <select id="f-type">
+                <option value="notes">Study Notes</option>
+                <option value="important-questions">Important Questions</option>
+                <option value="solved-examples">Solved Questions</option>
+                <option value="question-papers">Question Paper</option>
+                <option value="solved-papers">Solved Paper</option>
+                <option value="unsolved-questions">Unsolved Questions</option>
+                <option value="formula-sheets">Formula Sheet</option>
+                <option value="books">Book / Book Chapter</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-level">Class / Exam</label>
+              <select id="f-level">
+                <option value="class-9">Class 9</option>
+                <option value="class-10" selected>Class 10</option>
+                <option value="class-11">Class 11</option>
+                <option value="class-12">Class 12</option>
+                <option value="bsc">B.Sc Mathematics</option>
+                <option value="iit-jam">IIT JAM</option>
+                <option value="isi">ISI Entrance</option>
+                <option value="cmi">CMI Entrance</option>
+                <option value="tifr">TIFR GS</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-subject">Subject</label>
+              <input type="text" id="f-subject" placeholder="e.g. Algebra, Calculus" />
+            </div>
+            <div class="field">
+              <label for="f-chapter">Chapter</label>
+              <input type="text" id="f-chapter" placeholder="e.g. Real Numbers" />
+            </div>
+            <div class="field" style="margin-bottom: 0;">
+              <label for="f-language">Language</label>
+              <select id="f-language">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="en-hi">English + Hindi</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="editor-meta-card">
+            <h4>SEO</h4>
+            <div class="field">
+              <label for="f-seo-title">SEO Title</label>
+              <input type="text" id="f-seo-title" placeholder="Defaults to the main title" />
+            </div>
+            <div class="field" style="margin-bottom: 0;">
+              <label for="f-meta-desc">Meta Description</label>
+              <textarea id="f-meta-desc" rows="3" placeholder="One or two sentences shown in Google search results"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/shapes.js"></script>
+  <script src="../js/printdoc.js"></script>
+  <script src="../js/reader.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script src="js/editor.js"></script>
+</body>
+</html>
