@@ -2,5 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+# Pages load their content from these read-only public endpoints; Google must be
+# able to fetch them, otherwise it sees the pages empty. (Longer rule wins.)
+Allow: /api/public/
 
 Sitemap: https://mathslearn.online/sitemap.xml
