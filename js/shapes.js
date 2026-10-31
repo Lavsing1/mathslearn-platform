@@ -261,6 +261,41 @@
       if (el.tagName === "LI") el.innerHTML = html;
       else { el.insertAdjacentHTML("beforebegin", html); el.remove(); }
     });
+    renderOptions(root);
+  }
+
+
+  /* ---------- MCQ options on one line:  (A) 0   (B) 1/6   (C) 1/3   (D) 1/2 ----------
+     Several spaces collapse into one in HTML, so the options stuck together.
+     A paragraph that starts with (A) and has at least one more (B)/(C)/(D) is laid out
+     as separate, evenly spaced options (they wrap onto the next line on narrow screens). */
+  const OPT_SPLIT = /(?<=^|\s)(?=\(\s*[A-Da-d]\s*\))/;
+  const OPT_START = /^\(\s*[A-Da-d]\s*\)/;
+  function renderOptions(root) {
+    root.querySelectorAll("p, div, li").forEach((el) => {
+      if (!el.isConnected || el.classList.contains("mcq-options") || el.closest(".mcq-options, .katex, svg, pre, figure.shape-figure")) return;
+      if (el.querySelector("p, div, li, ul, ol, table, figure, svg")) return;
+      const text = (el.textContent || "").replace(/\u00a0/g, " ").trim();
+      if (!/^\(\s*[Aa]\s*\)/.test(text)) return;
+      if (text.split(OPT_SPLIT).filter((x) => OPT_START.test(x.trim())).length < 2) return;
+      const kids = Array.from(el.childNodes);
+      el.textContent = "";
+      el.classList.add("mcq-options");
+      let cur = null;
+      const open = () => { cur = document.createElement("span"); cur.className = "mcq-opt"; el.appendChild(cur); };
+      kids.forEach((n) => {
+        if (n.nodeType === 3) {
+          n.nodeValue.replace(/\u00a0/g, " ").split(OPT_SPLIT).forEach((part) => {
+            if (!part.trim()) return;
+            if (OPT_START.test(part.trim()) || !cur) open();
+            cur.appendChild(document.createTextNode(part));
+          });
+        } else {
+          if (!cur) open();
+          cur.appendChild(n);
+        }
+      });
+    });
   }
 
   window.MathsShapes = {

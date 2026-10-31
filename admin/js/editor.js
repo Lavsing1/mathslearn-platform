@@ -109,6 +109,8 @@
   });
   els.slug.addEventListener("input", () => { slugManuallyEdited = true; });
 
+  try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { /* ignore */ }
+
   /* ---------- Toolbar: formatting ---------- */
   document.querySelectorAll("[data-cmd]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -166,12 +168,90 @@
     return true;
   }
 
-  /* ---------- Text size (fixed set — never arbitrarily tiny/huge) ---------- */
-  const fontSizeSelect = document.getElementById("f-font-size");
-  fontSizeSelect.addEventListener("change", () => {
-    if (!fontSizeSelect.value) return;
-    wrapSelection({ className: `text-size-${fontSizeSelect.value}` });
-    fontSizeSelect.value = "";
+  /* ---------- Text size: type any number (points) ----------
+     Select text and enter e.g. 18, or set it with nothing selected and carry on
+     typing. The box also shows the size at the cursor. */
+  const sizeInput = document.getElementById("f-size-num");
+  function applyFontSize(pt) {
+    if (!(pt >= 6 && pt <= 120)) return;
+    const fromInput = document.activeElement === sizeInput;
+    const saved = lastRange ? lastRange.cloneRange() : null;   // the page selection from before the box was clicked
+    els.surface.focus();
+    const sel = window.getSelection();
+    if (fromInput && saved) { sel.removeAllRanges(); sel.addRange(saved); }
+    if (!sel.rangeCount || !els.surface.contains(sel.anchorNode)) return;
+    sizeInput.value = pt;
+    if (sel.isCollapsed) {                                   // nothing selected: size the text you type next
+      const span = document.createElement("span");
+      span.style.fontSize = pt + "pt";
+      span.appendChild(document.createTextNode("\u200B"));
+      sel.getRangeAt(0).insertNode(span);
+      const r = document.createRange();
+      r.setStart(span.firstChild, 1); r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+      scheduleAutosave();
+      return;
+    }
+    if (wrapSelection({ style: { fontSize: pt + "pt" } })) {
+      // sizes inside the new span would fight with it — drop them
+      els.surface.querySelectorAll('span[style*="font-size"]').forEach((sp) => {
+        sp.querySelectorAll('span[style*="font-size"], [class^="text-size-"]').forEach((inner) => {
+          inner.style.removeProperty("font-size");
+          inner.classList.remove("text-size-sm", "text-size-md", "text-size-lg", "text-size-xl");
+        });
+      });
+    }
+  }
+  sizeInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); applyFontSize(Number(sizeInput.value)); }
+  });
+  // choosing a number from the drop-down list (typing + Enter is handled above)
+  sizeInput.addEventListener("input", (e) => {
+    if (!e.inputType || e.inputType === "insertReplacementText") applyFontSize(Number(sizeInput.value));
+  });
+
+  /* ---------- Toolbar shows what is switched ON at the cursor ---------- */
+  function currentBlockTag() {
+    const sel = window.getSelection();
+    if (!sel || !sel.anchorNode || !els.surface.contains(sel.anchorNode)) return null;
+    let n = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+    while (n && n.parentElement !== els.surface) n = n.parentElement;
+    return n ? n.tagName.toLowerCase() : null;
+  }
+  function updateToolbarState() {
+    const sel = window.getSelection();
+    if (!sel || !sel.anchorNode || !els.surface.contains(sel.anchorNode)) return;
+    document.querySelectorAll("[data-cmd]").forEach((btn) => {
+      let on = false;
+      try { on = document.queryCommandState(btn.dataset.cmd); } catch (e) { /* not supported */ }
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", String(on));
+    });
+    const tag = currentBlockTag();
+    document.querySelectorAll("[data-block]").forEach((btn) => {
+      const want = btn.dataset.block;
+      const on = tag === want || (want === "p" && (tag === "div" || tag === "p"));
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", String(on));
+    });
+    if (document.activeElement !== sizeInput) {
+      const el = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement;
+      if (el) sizeInput.value = Math.round(parseFloat(getComputedStyle(el).fontSize) * 0.75);
+    }
+  }
+  document.addEventListener("selectionchange", updateToolbarState);
+  els.surface.addEventListener("keyup", updateToolbarState);
+  els.surface.addEventListener("mouseup", updateToolbarState);
+  document.querySelectorAll("button.tb-btn").forEach((b) => b.addEventListener("click", () => setTimeout(updateToolbarState, 0)));
+  // Clicking a toolbar button must not take the cursor away from the page
+  document.querySelectorAll("button.tb-btn").forEach((b) => b.addEventListener("mousedown", (e) => e.preventDefault()));
+  // Keyboard shortcuts: Ctrl+, subscript · Ctrl+. superscript (same as Google Docs)
+  els.surface.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === "," || e.key === ".")) {
+      e.preventDefault();
+      document.execCommand(e.key === "," ? "subscript" : "superscript");
+      scheduleAutosave(); updateToolbarState();
+    }
   });
 
   /* ---------- Text color / highlight ---------- */
@@ -328,6 +408,7 @@
     // contenteditable turns spaces into non-breaking spaces; turn them
     // back so $...$ / $$...$$ delimiters are matched reliably.
     els.previewContent.innerHTML = clone.innerHTML.replace(/&nbsp;/g, " ");
+    if (window.MathsShapes) window.MathsShapes.render(els.previewContent);
 
     if (typeof window.renderMathInElement !== "function") {
       // KaTeX scripts are loaded with `defer` from a CDN and may not be
@@ -389,6 +470,103 @@
     });
   }
 
+  /* ---------- Insert a shape (or just type  show.circle(radius=5) ) ---------- */
+  let lastRange = null;
+  document.addEventListener("selectionchange", () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount && els.surface.contains(sel.anchorNode)) lastRange = sel.getRangeAt(0).cloneRange();
+  });
+  const shapeSel = document.getElementById("shape-insert");
+  if (shapeSel) {
+    shapeSel.addEventListener("change", () => {
+      const tpl = window.MathsShapes && window.MathsShapes.templates[shapeSel.value];
+      if (tpl) {
+        els.surface.focus();
+        if (lastRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(lastRange); }
+        const p = document.createElement("p");
+        p.textContent = tpl;
+        insertAtCursor(p);
+        insertAtCursor(document.createElement("p"));
+        scheduleAutosave();
+      }
+      shapeSel.value = "";
+    });
+  }
+
+  /* ---------- Problem checker: marks trouble spots in yellow ----------
+     Looks at every block while you write: broken maths, an unclosed $ or $$,
+     Hindi inside maths without \text{}, a table pasted as plain text, an
+     empty heading, or a show.xxx(...) shape that cannot be drawn. The yellow
+     marker is never saved or shown to students. */
+  const problemBadge = document.getElementById("problem-badge");
+  const MATH_RE = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
+  let lintTimer = null;
+  let problemEls = [];
+  let problemCursor = -1;
+
+  function lintBlock(el) {
+    const out = [];
+    const text = (el.textContent || "").replace(/\u00a0/g, " ");
+    if (/^\s*show\./i.test(text)) {
+      if (window.MathsShapes) {
+        const r = window.MathsShapes.validate(text);
+        if (!r.ok) out.push("Shape: " + r.error);
+      }
+      return out;
+    }
+    if (/^H[1-6]$/.test(el.tagName) && !text.trim()) out.push("Empty heading");
+    if (/\t[^\n]*\t/.test(text)) out.push("Looks like a table pasted as plain text — use the Table button");
+    if ((text.match(/\$\$/g) || []).length % 2) out.push("Unclosed $$ — every $$ needs a closing $$");
+    else if ((text.replace(/\$\$/g, "").match(/(?<!\\)\$/g) || []).length % 2) out.push("Unclosed $ — every $ needs a closing $");
+    if (window.katex) {
+      MATH_RE.lastIndex = 0;
+      let m;
+      while ((m = MATH_RE.exec(text))) {
+        const display = m[1] !== undefined;
+        const src = (display ? m[1] : m[2]).trim();
+        if (!src) continue;
+        if (/[\u0900-\u097F]/.test(src.replace(/\\text\{[^{}]*\}/g, ""))) { out.push("Hindi text inside maths must be inside \\text{…}"); break; }
+        try {
+          window.katex.renderToString(src, { throwOnError: true, displayMode: display, macros: { "\\cosec": "\\csc" }, strict: false });
+        } catch (e) {
+          out.push("Maths error: " + String(e.message || e).replace(/^KaTeX parse error:\s*/i, "").slice(0, 100));
+          break;
+        }
+      }
+    }
+    return out;
+  }
+
+  function runLint() {
+    const found = [];
+    Array.from(els.surface.children).forEach((b) => {
+      const msg = lintBlock(b).join(" • ");
+      if (msg) {
+        if (b.getAttribute("data-lint") !== msg) b.setAttribute("data-lint", msg);
+        found.push(b);
+      } else if (b.hasAttribute("data-lint")) b.removeAttribute("data-lint");
+    });
+    problemEls = found;
+    if (problemBadge) {
+      problemBadge.hidden = found.length === 0;
+      problemBadge.textContent = `⚠ ${found.length} problem${found.length > 1 ? "s" : ""} — click to jump`;
+    }
+  }
+  function scheduleLint() {
+    clearTimeout(lintTimer);
+    lintTimer = setTimeout(runLint, 700);
+  }
+  if (problemBadge) {
+    const jump = () => {
+      if (!problemEls.length) return;
+      problemCursor = (problemCursor + 1) % problemEls.length;
+      problemEls[problemCursor].scrollIntoView({ block: "center", behavior: "smooth" });
+    };
+    problemBadge.addEventListener("click", jump);
+    problemBadge.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); jump(); } });
+  }
+  window.addEventListener("load", () => setTimeout(scheduleLint, 1200)); // KaTeX is loaded with `defer`
+
   /* ---------- Clean copy of the page (no runtime page spacers) ---------- */
   function getCleanClone() {
     const clone = els.surface.cloneNode(true);
@@ -397,6 +575,7 @@
       n.style.removeProperty("--pg");
       if (!n.getAttribute("style")) n.removeAttribute("style");
     });
+    clone.querySelectorAll("[data-lint]").forEach((n) => n.removeAttribute("data-lint"));
     clone.removeAttribute("style");
     return clone;
   }
@@ -602,6 +781,7 @@
     setStatusPill(data.status || "draft");
     updateCounts();
     schedulePaginate();
+    scheduleLint();
   }
 
   function setStatusPill(status) {
@@ -675,6 +855,7 @@
   function scheduleAutosave() {
     updateCounts();
     schedulePaginate();
+    scheduleLint();
     refreshPreviewIfOpen();
     backupLocally();
     clearTimeout(autosaveTimer);

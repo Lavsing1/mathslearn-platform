@@ -68,6 +68,8 @@
     .shape-figure .s-text { fill: currentColor; font: 0.5px sans-serif; }
     .shape-figure figcaption { font-size: .8rem; color: #555; }
     .shape-error { display: none; }
+    .mcq-options { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 2.6rem; margin: .4em 0 .9em; }
+    .mcq-opt { min-width: 4.5rem; }
     .doc-source { margin-top: 1.8em; padding-top: .5em; border-top: 1px dashed #999; font-size: .72rem; color: #555; }
     .wm { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
   `;

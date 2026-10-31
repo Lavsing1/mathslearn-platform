@@ -368,3 +368,69 @@ body.editor-fs .preview-pane[hidden] { display: none; }
   body.editor-fs .save-status { display: none; }
   body.editor-fs .fs-actions .btn { padding-inline: 0.6rem; }
 }
+
+
+/* ---------- typed shapes: show.circle(radius=5) etc. (js/shapes.js) ---------- */
+.shape-figure { margin: 0.9em auto; text-align: center; break-inside: avoid; page-break-inside: avoid; }
+.shape-figure svg { max-width: 100%; height: auto; color: var(--color-text, #111); }
+.shape-figure .s-shape { fill: none; stroke: currentColor; stroke-width: 0.05; }
+.shape-figure .s-fill { fill: rgba(79, 70, 229, 0.08); }
+.shape-figure .s-line { fill: none; stroke: currentColor; stroke-width: 0.05; }
+.shape-figure .s-text { fill: currentColor; font: 0.5px system-ui, "Segoe UI", sans-serif; }
+.shape-figure figcaption { font-size: 0.8rem; color: var(--color-text-muted, #555); margin-top: 0.2em; }
+.shape-error { background: #fef9c3; border: 1px solid #eab308; color: #854d0e; padding: 0.5em 0.8em; border-radius: 6px; font-size: 0.85rem; margin: 0.6em 0; }
+
+/* ---------- Problem checker: yellow highlight inside the editor ---------- */
+.editor-surface [data-lint] {
+  background: rgba(250, 204, 21, 0.22);
+  box-shadow: inset 4px 0 0 #eab308;
+  border-radius: 4px;
+}
+.editor-surface [data-lint]::after {
+  content: "⚠ " attr(data-lint);
+  display: block; width: fit-content; max-width: 100%; margin-top: 0.3rem; padding: 0.15rem 0.5rem;
+  font: 600 0.72rem/1.35 system-ui, sans-serif; font-style: normal; color: #854d0e;
+  background: #fef08a; border-radius: 4px; user-select: none; pointer-events: none;
+}
+.problem-badge {
+  display: inline-block; margin-left: 0.6rem; padding: 0.1rem 0.65rem; border-radius: 999px;
+  background: #fef08a; color: #854d0e; font-weight: 600; cursor: pointer;
+}
+.problem-badge[hidden] { display: none; }
+
+
+/* ---------- Tighter writing: smaller gap between lines / paragraphs ---------- */
+.editor-surface { line-height: 1.6; }
+.editor-surface p { margin: 0 0 0.45em; }
+.editor-surface h2 { margin: 0.9em 0 0.35em; }
+.editor-surface h3 { margin: 0.8em 0 0.3em; }
+.editor-surface ul, .editor-surface ol { margin: 0.3em 0 0.5em; padding-left: 1.6em; }
+.editor-surface li { margin: 0.1em 0; }
+
+/* ---------- Toolbar: show which buttons are ON ---------- */
+.tb-btn.active, .tb-btn[aria-pressed="true"] {
+  background: var(--color-primary, #4f46e5); color: #fff; border-color: var(--color-primary, #4f46e5);
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.35);
+}
+.tb-size-input {
+  width: 62px; height: 34px; padding: 0 0.4rem; text-align: center; font-weight: 700; font-size: 0.85rem;
+  border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-text);
+}
+body.editor-fs .tb-size-input { width: 62px; }
+
+/* ---------- More room between toolbar buttons and form fields ---------- */
+.editor-toolbar { gap: 8px 10px; padding: var(--space-3); }
+.editor-toolbar .tb-sep { margin-inline: 8px; }
+.tb-btn { width: 38px; height: 38px; }
+.tb-btn.wide { padding: 0 0.8rem; }
+.tb-size-input, .tb-font-size { height: 38px; }
+.tb-group { margin-inline: 2px; }
+.field { margin-bottom: var(--space-5); }
+.field label { margin-bottom: 0.5rem; }
+body.editor-fs .editor-toolbar { gap: 8px; }
+body.editor-fs .editor-toolbar .tb-sep { margin: 6px 0; }
+body.editor-fs .tb-btn.wide { min-width: 38px; }
+
+/* ---------- MCQ options: evenly spaced, wrap on small screens ---------- */
+.mcq-options { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 2.6rem; margin: 0.4em 0 0.9em; }
+.mcq-opt { white-space: normal; min-width: 4.5rem; }

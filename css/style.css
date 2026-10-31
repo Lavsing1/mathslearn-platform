@@ -659,3 +659,7 @@ html.live-loading .book-grid .book-card:not([data-live]) { visibility: hidden; }
 .article-body h3 { margin: 1em 0 0.35em; }
 .article-body ul, .article-body ol { margin: 0.3em 0 0.6em; }
 .article-body li { margin: 0.1em 0; }
+
+/* ---------- MCQ options: evenly spaced, wrap on small screens ---------- */
+.mcq-options { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 2.6rem; margin: 0.4em 0 0.9em; }
+.mcq-opt { white-space: normal; min-width: 4.5rem; }

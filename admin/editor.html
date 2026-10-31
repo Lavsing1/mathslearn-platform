@@ -81,13 +81,14 @@
             <button type="button" class="tb-btn wide" data-block="h2" title="Heading 2">H2</button>
             <button type="button" class="tb-btn wide" data-block="h3" title="Heading 3">H3</button>
             <button type="button" class="tb-btn wide" data-block="p" title="Paragraph">¶</button>
-            <select class="tb-font-size" id="f-font-size" title="Text size">
-              <option value="">Size…</option>
-              <option value="sm">Small</option>
-              <option value="md">Normal</option>
-              <option value="lg">Large</option>
-              <option value="xl">Extra Large</option>
-            </select>
+            <input type="number" class="tb-size-input" id="f-size-num" list="size-presets" min="6" max="120" step="1" placeholder="pt"
+                   title="Text size in points. Type any number and press Enter (select the text first, or set it before you type)." />
+            <datalist id="size-presets">
+              <option value="8"></option><option value="10"></option><option value="11"></option><option value="12"></option>
+              <option value="14"></option><option value="16"></option><option value="18"></option><option value="20"></option>
+              <option value="24"></option><option value="28"></option><option value="32"></option><option value="36"></option>
+              <option value="48"></option><option value="60"></option><option value="72"></option>
+            </datalist>
             <div class="tb-sep"></div>
             <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="Bullet list">•≡</button>
             <button type="button" class="tb-btn" data-cmd="insertOrderedList" title="Numbered list">1≡</button>
@@ -116,6 +117,17 @@
             <button type="button" class="tb-btn wide" id="btn-table" title="Insert table">⊞ Table</button>
             <button type="button" class="tb-btn wide" id="btn-formula-block" title="Insert formula box">Formula</button>
             <button type="button" class="tb-btn wide" id="btn-example-block" title="Insert solved-example box">Example</button>
+            <select class="tb-font-size" id="shape-insert" title="Insert a shape — you can also just type  show.circle(radius=5)">
+              <option value="">△ Shape…</option>
+              <option value="circle">Circle</option>
+              <option value="triangle">Triangle</option>
+              <option value="right_triangle">Right triangle</option>
+              <option value="rectangle">Rectangle</option>
+              <option value="square">Square</option>
+              <option value="line">Line</option>
+              <option value="angle">Angle</option>
+              <option value="polygon">Polygon</option>
+            </select>
             <button type="button" class="tb-btn" id="btn-link" title="Insert link">🔗</button>
             <div class="tb-sep"></div>
             <button type="button" class="tb-btn" id="btn-undo" title="Undo">↶</button>
@@ -131,7 +143,7 @@
           </div>
 
           <div class="editor-footer-bar">
-            <span><span id="word-count">0</span> words · <span id="char-count">0</span> characters · <span id="page-indicator">Page 1 / 1</span></span>
+            <span><span id="word-count">0</span> words · <span id="char-count">0</span> characters · <span id="page-indicator">Page 1 / 1</span> <span id="problem-badge" class="problem-badge" role="button" tabindex="0" title="Click to jump to the next problem" hidden></span></span>
             <span class="footer-actions" style="display:flex;gap:8px;">
               <button type="button" class="btn btn-ghost btn-sm" id="btn-fs-editor-footer">⛶ Full Screen Editor</button>
               <button type="button" class="btn btn-ghost btn-sm" id="btn-fullscreen-preview">📖 Reader View (A4)</button>
@@ -223,6 +235,7 @@
     </div>
   </div>
 
+  <script src="../js/shapes.js"></script>
   <script src="../js/printdoc.js"></script>
   <script src="../js/reader.js"></script>
   <script src="js/admin-auth.js"></script>
