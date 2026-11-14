@@ -172,42 +172,155 @@
      Select text and enter e.g. 18, or set it with nothing selected and carry on
      typing. The box also shows the size at the cursor. */
   const sizeInput = document.getElementById("f-size-num");
+  const unwrap = (el) => { const parent = el.parentNode; while (el.firstChild) parent.insertBefore(el.firstChild, el); parent.removeChild(el); };
+  const dropSize = (el) => {
+    el.style.removeProperty("font-size");
+    el.classList.remove("text-size-sm", "text-size-md", "text-size-lg", "text-size-xl");
+    if (!el.getAttribute("style")) el.removeAttribute("style");
+    if (el.tagName === "SPAN" && !el.attributes.length) unwrap(el);
+  };
+  function topBlockOf(node) {
+    let n = node && (node.nodeType === 1 ? node : node.parentElement);
+    while (n && n.parentElement !== els.surface) n = n.parentElement;
+    return n;
+  }
+  // pt = a number, or null to go back to the normal size
   function applyFontSize(pt) {
-    if (!(pt >= 6 && pt <= 120)) return;
+    if (pt !== null && !(pt >= 6 && pt <= 120)) return;
     const fromInput = document.activeElement === sizeInput;
-    const saved = lastRange ? lastRange.cloneRange() : null;   // the page selection from before the box was clicked
+    const saved = lastRange ? lastRange.cloneRange() : null;     // the page selection from before the box was clicked
     els.surface.focus();
     const sel = window.getSelection();
     if (fromInput && saved) { sel.removeAllRanges(); sel.addRange(saved); }
     if (!sel.rangeCount || !els.surface.contains(sel.anchorNode)) return;
-    sizeInput.value = pt;
-    if (sel.isCollapsed) {                                   // nothing selected: size the text you type next
-      const span = document.createElement("span");
-      span.style.fontSize = pt + "pt";
-      span.appendChild(document.createTextNode("\u200B"));
-      sel.getRangeAt(0).insertNode(span);
-      const r = document.createRange();
-      r.setStart(span.firstChild, 1); r.collapse(true);
-      sel.removeAllRanges(); sel.addRange(r);
+    if (pt !== null) sizeInput.value = pt;
+
+    if (sel.isCollapsed) {                  // nothing selected: change the whole paragraph the cursor is in
+      const block = topBlockOf(sel.anchorNode);
+      if (!block) return;
+      block.querySelectorAll('[style*="font-size"], [class^="text-size-"]').forEach(dropSize);
+      if (pt === null) { block.style.removeProperty("font-size"); if (!block.getAttribute("style")) block.removeAttribute("style"); }
+      else block.style.fontSize = pt + "pt";
       scheduleAutosave();
       return;
     }
-    if (wrapSelection({ style: { fontSize: pt + "pt" } })) {
-      // sizes inside the new span would fight with it — drop them
-      els.surface.querySelectorAll('span[style*="font-size"]').forEach((sp) => {
-        sp.querySelectorAll('span[style*="font-size"], [class^="text-size-"]').forEach((inner) => {
-          inner.style.removeProperty("font-size");
-          inner.classList.remove("text-size-sm", "text-size-md", "text-size-lg", "text-size-xl");
-        });
-      });
-    }
+
+    // Selected text (can be part of a line, or many paragraphs)
+    document.execCommand("styleWithCSS", false, false);
+    document.execCommand("fontSize", false, "7");             // marks the selection with <font size=7>
+    const created = [];
+    els.surface.querySelectorAll('font[size="7"]').forEach((f) => {
+      const span = document.createElement("span");
+      if (pt !== null) span.style.fontSize = pt + "pt";
+      while (f.firstChild) span.appendChild(f.firstChild);
+      f.parentNode.replaceChild(span, f);
+      created.push(span);
+    });
+    // everything else inside the selection that had its own size is reset, so the new size really applies
+    els.surface.querySelectorAll('[style*="font-size"], [class^="text-size-"]').forEach((el) => {
+      if (created.includes(el)) return;
+      const inside = sel.rangeCount && sel.containsNode(el, false);
+      const insideNew = created.some((c) => c !== el && c.contains(el));
+      if (inside || insideNew) dropSize(el);
+    });
+    created.forEach((c) => { if (pt === null && !c.attributes.length) unwrap(c); });
+    scheduleAutosave();
   }
   sizeInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { e.preventDefault(); applyFontSize(Number(sizeInput.value)); }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const v = sizeInput.value.trim();
+      applyFontSize(v === "" || Number(v) === 0 ? null : Number(v));    // empty or 0 = normal size
+    }
   });
   // choosing a number from the drop-down list (typing + Enter is handled above)
   sizeInput.addEventListener("input", (e) => {
     if (!e.inputType || e.inputType === "insertReplacementText") applyFontSize(Number(sizeInput.value));
+  });
+
+
+  /* ---------- Paste: keep the structure, drop the mess ----------
+     Pasted text such as "# Title" / "## Sub" / "- item" / "**bold**" becomes real
+     headings, lists and bold. Pasted web/ChatGPT/Word content keeps headings, lists,
+     tables, bold, italic, sub/superscript, but loses its own font sizes, colours and fonts —
+     which is what made text suddenly huge or impossible to shrink. */
+  const escHtml = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const inlineMd = (t) => escHtml(t).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+  function markdownToHtml(text) {
+    const lines = text.replace(/\r\n?/g, "\n").split("\n");
+    const out = [];
+    let list = null, table = null;
+    const closeList = () => { if (list) { out.push(`</${list}>`); list = null; } };
+    const closeTable = () => { if (table) { out.push("</tbody></table>"); table = null; } };
+    lines.forEach((raw) => {
+      const line = raw.replace(/\s+$/, "");
+      let m;
+      if (!line.trim()) { closeList(); closeTable(); return; }
+      if (/^\s*\|.*\|\s*$/.test(line)) {                               // | a | b |
+        closeList();
+        if (/^\s*\|[\s:|-]+\|\s*$/.test(line)) return;                  // |---|---|
+        const cells = line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+        if (!table) { table = true; out.push("<table><tbody>"); out.push("<tr>" + cells.map((c) => `<th>${inlineMd(c)}</th>`).join("") + "</tr>"); }
+        else out.push("<tr>" + cells.map((c) => `<td>${inlineMd(c)}</td>`).join("") + "</tr>");
+        return;
+      }
+      closeTable();
+      if ((m = line.match(/^\s*(#{1,6})\s+(.*)$/))) { closeList(); out.push(m[1].length === 1 ? `<h2>${inlineMd(m[2])}</h2>` : `<h3>${inlineMd(m[2])}</h3>`); return; }
+      if ((m = line.match(/^\s*[-*•]\s+(.*)$/))) { if (list !== "ul") { closeList(); out.push("<ul>"); list = "ul"; } out.push(`<li>${inlineMd(m[1])}</li>`); return; }
+      if ((m = line.match(/^\s*\d+[.)]\s+(.*)$/))) { if (list !== "ol") { closeList(); out.push("<ol>"); list = "ol"; } out.push(`<li>${inlineMd(m[1])}</li>`); return; }
+      if (/^\s*[-*_]{3,}\s*$/.test(line)) { closeList(); return; }       // --- rule
+      closeList();
+      out.push(`<p>${inlineMd(line.trim())}</p>`);
+    });
+    closeList(); closeTable();
+    return out.join("");
+  }
+  const KEEP = new Set(["P", "H2", "H3", "UL", "OL", "LI", "TABLE", "THEAD", "TBODY", "TR", "TH", "TD", "STRONG", "B", "EM", "I", "U", "SUB", "SUP", "BR", "A", "CODE", "BLOCKQUOTE"]);
+  function cleanNode(node, out) {
+    node.childNodes.forEach((n) => {
+      if (n.nodeType === 3) { out.appendChild(document.createTextNode(n.nodeValue)); return; }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName;
+      if (["SCRIPT", "STYLE", "META", "LINK", "HEAD", "TITLE"].includes(tag)) return;
+      let name = tag;
+      if (tag === "H1" || tag === "H2") name = "H2";
+      else if (/^H[3-6]$/.test(tag)) name = "H3";
+      else if (tag === "DIV" || tag === "SECTION" || tag === "ARTICLE" || tag === "MAIN" || tag === "BODY") {
+        // a wrapper: unwrap it if it holds blocks, otherwise it is just one paragraph
+        if (n.querySelector("p, h1, h2, h3, h4, h5, h6, ul, ol, table, div, blockquote")) { cleanNode(n, out); return; }
+        name = "P";
+      }
+      if (!KEEP.has(name)) { cleanNode(n, out); return; }           // SPAN, FONT… -> keep only the text
+      const el = document.createElement(name);
+      if (name === "A" && n.getAttribute("href")) el.setAttribute("href", n.getAttribute("href"));
+      if ((name === "TD" || name === "TH")) { ["colspan", "rowspan"].forEach((k) => n.getAttribute(k) && el.setAttribute(k, n.getAttribute(k))); }
+      cleanNode(n, el);
+      if ((name === "P" || name === "LI") && !el.textContent.trim() && !el.querySelector("img, br")) return;   // drop empty paragraphs
+      out.appendChild(el);
+    });
+  }
+  function cleanPastedHtml(html) {
+    const doc = new DOMParser().parseFromString(html.replace(/<!--[\s\S]*?-->/g, ""), "text/html");
+    const box = document.createElement("div");
+    cleanNode(doc.body, box);
+    // a <div> can nest another block: flatten "P inside P" produced above
+    box.querySelectorAll("p p").forEach((inner) => { const o = inner.parentNode; o.parentNode.insertBefore(inner, o.nextSibling); });
+    box.querySelectorAll("li > p").forEach((inner) => { while (inner.firstChild) inner.parentNode.insertBefore(inner.firstChild, inner); inner.remove(); });   // tidy list items
+    return box.innerHTML;
+  }
+  els.surface.addEventListener("paste", (e) => {
+    const cd = e.clipboardData;
+    if (!cd) return;
+    const html = cd.getData("text/html");
+    const text = cd.getData("text/plain");
+    let out;
+    if (html && /<(h[1-6]|p|ul|ol|li|table|strong|b|em|i|sub|sup)\b/i.test(html)) out = cleanPastedHtml(html);
+    else if (text) out = markdownToHtml(text);
+    else return;
+    if (!out || !out.trim()) return;
+    e.preventDefault();
+    document.execCommand("insertHTML", false, out);
+    scheduleAutosave();
   });
 
   /* ---------- Toolbar shows what is switched ON at the cursor ---------- */
