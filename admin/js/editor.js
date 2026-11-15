@@ -46,7 +46,7 @@
     topbarTitle: document.getElementById("editor-topbar-title"),
   };
 
-  const LOCAL_KEY = `mathslearn-draft-${contentId || "new"}`;
+  const localKey = () => `mathslearn-draft-${contentId || "new"}`;
 
   /* ---------- Slug helper ---------- */
   function slugify(text) {
@@ -142,6 +142,9 @@
   function wrapSelection({ className, style }) {
     els.surface.focus();
     const sel = window.getSelection();
+    if ((!sel.rangeCount || sel.isCollapsed || !els.surface.contains(sel.anchorNode)) && lastRange && !lastRange.collapsed) {
+      sel.removeAllRanges(); sel.addRange(lastRange.cloneRange());   // colour picker took the selection away
+    }
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !els.surface.contains(sel.anchorNode)) {
       window.alert("Select the text you want to change first, then use this control.");
       return false;
@@ -434,8 +437,7 @@
       tbody.appendChild(tr);
     }
     table.appendChild(tbody);
-    insertAtCursor(table);
-    insertAtCursor(document.createElement("p"));
+    insertBlock(table);
     scheduleAutosave();
   });
 
@@ -469,6 +471,25 @@
     sel.addRange(range);
   }
 
+  // Insert a block (table, formula box, example box, shape, equation) AFTER the paragraph the
+  // cursor is in. insertNode() inside a <p> produced <p><table>…</table></p>, which breaks on reload.
+  function insertBlock(node) {
+    els.surface.focus();
+    const sel = window.getSelection();
+    if (lastRange && (!sel.rangeCount || !els.surface.contains(sel.anchorNode))) { sel.removeAllRanges(); sel.addRange(lastRange); }
+    const anchor = sel.rangeCount && els.surface.contains(sel.anchorNode) ? topBlockOf(sel.anchorNode) : null;
+    const tail = document.createElement("p");
+    tail.appendChild(document.createElement("br"));            // an empty <p> has no height -> cursor can't enter it
+    const blank = anchor && anchor.tagName === "P" && !anchor.textContent.trim() && !anchor.querySelector("img");
+    if (!anchor) els.surface.append(node, tail);
+    else if (blank) anchor.replaceWith(node, tail);
+    else anchor.after(node, tail);
+    const r = document.createRange();
+    r.setStart(tail, 0); r.collapse(true);
+    sel.removeAllRanges(); sel.addRange(r);
+    tail.scrollIntoView({ block: "nearest" });
+  }
+
   document.getElementById("btn-math-inline").addEventListener("click", () => {
     insertAtCursor(document.createTextNode("$x^2$"));
     scheduleAutosave();
@@ -476,25 +497,21 @@
   document.getElementById("btn-math-block").addEventListener("click", () => {
     const p = document.createElement("p");
     p.textContent = "$$\\int_0^1 x^2\\,dx = \\frac{1}{3}$$";
-    insertAtCursor(p);
+    insertBlock(p);
     scheduleAutosave();
   });
   document.getElementById("btn-formula-block").addEventListener("click", () => {
     const div = document.createElement("div");
     div.className = "formula-block";
-    div.contentEditable = "true";
     div.textContent = "a = bq + r,  where 0 ≤ r < b";
-    insertAtCursor(div);
-    insertAtCursor(document.createElement("p"));
+    insertBlock(div);
     scheduleAutosave();
   });
   document.getElementById("btn-example-block").addEventListener("click", () => {
     const div = document.createElement("div");
     div.className = "example-block";
-    div.contentEditable = "true";
     div.innerHTML = "<strong>Solved Example.</strong><p style='margin:0.5rem 0 0;'>Write the question here, then the worked solution below.</p>";
-    insertAtCursor(div);
-    insertAtCursor(document.createElement("p"));
+    insertBlock(div);
     scheduleAutosave();
   });
 
@@ -594,12 +611,9 @@
     shapeSel.addEventListener("change", () => {
       const tpl = window.MathsShapes && window.MathsShapes.templates[shapeSel.value];
       if (tpl) {
-        els.surface.focus();
-        if (lastRange) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(lastRange); }
         const p = document.createElement("p");
         p.textContent = tpl;
-        insertAtCursor(p);
-        insertAtCursor(document.createElement("p"));
+        insertBlock(p);
         scheduleAutosave();
       }
       shapeSel.value = "";
@@ -678,7 +692,8 @@
     problemBadge.addEventListener("click", jump);
     problemBadge.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); jump(); } });
   }
-  window.addEventListener("load", () => setTimeout(scheduleLint, 1200)); // KaTeX is loaded with `defer`
+  const kickLint = () => setTimeout(scheduleLint, 1200);          // KaTeX is loaded with `defer`
+  if (document.readyState === "complete") kickLint(); else window.addEventListener("load", kickLint);
 
   /* ---------- Clean copy of the page (no runtime page spacers) ---------- */
   function getCleanClone() {
@@ -852,7 +867,7 @@
      server confirms a save) ---------- */
   function backupLocally() {
     try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify({ ...buildPayload("draft"), savedAt: Date.now() }));
+      localStorage.setItem(localKey(), JSON.stringify({ ...buildPayload("draft"), savedAt: Date.now() }));
     } catch (e) {
       /* localStorage unavailable — server autosave is still the
          source of truth, so this is a soft failure */
@@ -862,7 +877,7 @@
   function restoreLocalBackupIfNewer() {
     if (contentId) return; // only offer recovery for content not yet loaded from the server
     try {
-      const raw = localStorage.getItem(LOCAL_KEY);
+      const raw = localStorage.getItem(localKey());
       if (!raw) return;
       const backup = JSON.parse(raw);
       if (!backup.title && !backup.body_html) return;
@@ -871,7 +886,7 @@
         `We found unsaved work from about ${ageMins} minute(s) ago ("${backup.title || "Untitled"}"). Restore it?`
       );
       if (restore) applyPayloadToForm(backup);
-      else localStorage.removeItem(LOCAL_KEY);
+      else localStorage.removeItem(localKey());
     } catch (e) {
       /* corrupted backup — ignore */
     }
@@ -910,15 +925,17 @@
   }
 
   /* ---------- Save to server ---------- */
-  async function saveToServer(status) {
+  async function saveToServer(status, opts = {}) {
     const payload = buildPayload(status);
     const snapshot = JSON.stringify(payload);
-    if (snapshot === lastSavedSnapshot && status === "draft") return; // nothing changed
+    if (snapshot === lastSavedSnapshot && status !== "published") return; // nothing changed
 
     if (!payload.title) {
       setSaveStatus("error", "Add a title before saving");
-      if (isFs()) exitFs();
-      els.title.focus();
+      if (!opts.auto) {                       // only an explicit Save/Publish leaves full-screen; autosave never does
+        if (isFs()) exitFs();
+        els.title.focus();
+      }
       return;
     }
     if (user.offline) {
@@ -952,7 +969,7 @@
         const url = new URL(window.location.href);
         url.searchParams.set("id", contentId);
         window.history.replaceState({}, "", url);
-        localStorage.removeItem(LOCAL_KEY); // server now has it; stop tracking the "new" backup
+        try { localStorage.removeItem("mathslearn-draft-new"); } catch (x) { /* ignore */ } // server now has it; stop tracking the "new" backup
       }
       lastSavedSnapshot = snapshot;
       setStatusPill(status);
@@ -980,7 +997,7 @@
       return;
     }
     setSaveStatus("", "Unsaved changes…");
-    autosaveTimer = setTimeout(() => saveToServer("draft"), 2000);
+    autosaveTimer = setTimeout(() => saveToServer(currentStatus === "archived" ? "archived" : "draft", { auto: true }), 2000);
   }
 
   els.surface.addEventListener("input", scheduleAutosave);
