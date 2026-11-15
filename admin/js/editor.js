@@ -111,11 +111,81 @@
 
   try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { /* ignore */ }
 
+  /* ---------- Clean-up after native commands / typing ----------
+     1. Chrome's list command can leave <p><ul>…</ul></p> (invalid: breaks on reload and pagination).
+     2. Switching a list off, or Ctrl+A + Delete, leaves loose text directly inside the page with no
+        <p> around it — pagination, size box and the problem checker only understand real blocks.
+     3. Chrome sprinkles <span style="font-size:1rem"> that later fights with the size box. */
+  const BLOCK_SEL = "ul, ol, table, div, h2, h3, h4, blockquote, p";
+  const ROOT_BLOCK = /^(P|H[1-6]|UL|OL|TABLE|DIV|BLOCKQUOTE|PRE|HR)$/;
+  function normalizeSurface(opts = {}) {
+    const root = els.surface;
+    const junk = root.querySelector('font:not([size]), span[style="font-size: 1rem;"]');   // 3. leftovers from native commands
+    const needs = !!junk || Array.from(root.childNodes).some((n) =>
+      (n.nodeType === 3 && n.nodeValue.trim()) || (n.nodeType === 1 && !ROOT_BLOCK.test(n.tagName)) ||
+      (n.nodeType === 1 && n.tagName === "P" && Array.from(n.children).some((c) => c.matches(BLOCK_SEL))));
+    if (!needs && !opts.spans) return;
+    const sel = window.getSelection();
+    const keep = sel.rangeCount && root.contains(sel.anchorNode)
+      ? { an: sel.anchorNode, ao: sel.anchorOffset, fn: sel.focusNode, fo: sel.focusOffset } : null;
+    let last = null, hoisted = false;
+    Array.from(root.children).forEach((p) => {            // 1. blocks inside a <p>
+      if (p.tagName !== "P" || !Array.from(p.children).some((c) => c.matches(BLOCK_SEL))) return;
+      const out = []; let run = null;
+      Array.from(p.childNodes).forEach((n) => {
+        if (n.nodeType === 1 && n.matches(BLOCK_SEL)) { run = null; out.push(n); return; }
+        if (n.nodeType === 3 && !n.nodeValue.trim() && !run) return;
+        if (!run) { run = document.createElement("p"); out.push(run); }
+        run.appendChild(n);
+      });
+      p.replaceWith(...out);
+      last = out[out.length - 1];
+      hoisted = true;
+    });
+    let run = null;                                        // 2. loose text / inline tags / <br> at the top level
+    Array.from(root.childNodes).forEach((n) => {
+      if (n.nodeType === 1 && ROOT_BLOCK.test(n.tagName)) { run = null; return; }
+      if (n.nodeType === 8) return;
+      if (n.nodeType === 3 && !n.nodeValue.trim() && !run) return;
+      if (!run) { run = document.createElement("p"); root.insertBefore(run, n); }
+      run.appendChild(n);
+      last = run;
+    });
+    let touched = false;
+    if (opts.spans || junk) {                              // 3. junk: <font color=page-colour>, size spans equal to the page size
+      root.querySelectorAll("span[style]").forEach((sp) => {
+        if ((sp.getAttribute("style") || "").replace(/\s/g, "") === "font-size:1rem;") { unwrap(sp); touched = true; }
+      });
+      root.querySelectorAll("font").forEach((f) => {
+        if (f.hasAttribute("size")) return;
+        const c = (f.getAttribute("color") || "").toLowerCase();
+        if (!f.attributes.length || c === "#1b1f2a") { unwrap(f); touched = true; }
+      });
+    }
+    if (touched && !last) last = root.lastElementChild;
+    if (last) {                                            // put the cursor back where the user was
+      try {
+        const r = document.createRange();
+        const ranged = keep && !(keep.an === keep.fn && keep.ao === keep.fo) && root.contains(keep.an) && root.contains(keep.fn) && keep.an !== root;
+        if (ranged) { r.setStart(keep.an, keep.ao); r.setEnd(keep.fn, keep.fo); }   // a selection stays as it was
+        else if (!hoisted && keep && keep.an !== root && root.contains(keep.an) && keep.an.nodeType === 3 && keep.an.parentNode !== root) {
+          r.setStart(keep.an, Math.min(keep.ao, keep.an.nodeValue.length)); r.collapse(true);   // cursor inside its text
+        } else {                                                                     // otherwise: end of its line
+          const host = keep && keep.an !== root && root.contains(keep.an)
+            ? (keep.an.nodeType === 1 ? keep.an : keep.an.parentElement).closest("li, p, h2, h3, td, th") : null;
+          r.selectNodeContents(host && root.contains(host) ? host : last); r.collapse(false);
+        }
+        sel.removeAllRanges(); sel.addRange(r);
+      } catch (e) { /* selection stays where the browser put it */ }
+    }
+  }
+
   /* ---------- Toolbar: formatting ---------- */
   document.querySelectorAll("[data-cmd]").forEach((btn) => {
     btn.addEventListener("click", () => {
       els.surface.focus();
       document.execCommand(btn.dataset.cmd, false, null);
+      normalizeSurface({ spans: true });
       scheduleAutosave();
     });
   });
@@ -123,6 +193,7 @@
     btn.addEventListener("click", () => {
       els.surface.focus();
       document.execCommand("formatBlock", false, btn.dataset.block);
+      normalizeSurface({ spans: true });
       scheduleAutosave();
     });
   });
@@ -164,8 +235,7 @@
     }
     sel.removeAllRanges();
     const newRange = document.createRange();
-    newRange.selectNodeContents(span);
-    newRange.collapse(false);
+    newRange.selectNodeContents(span);                     // stay selected: colour, then highlight, then size…
     sel.addRange(newRange);
     scheduleAutosave();
     return true;
@@ -471,23 +541,34 @@
     sel.addRange(range);
   }
 
-  // Insert a block (table, formula box, example box, shape, equation) AFTER the paragraph the
-  // cursor is in. insertNode() inside a <p> produced <p><table>…</table></p>, which breaks on reload.
+  // Insert a block (table, formula box, example box, shape, equation) at the cursor.
+  // Uses the browser's own insertHTML so Ctrl+Z undoes it, a paragraph is split cleanly
+  // (never <p><table>…), and an empty line is always left below the block.
   function insertBlock(node) {
     els.surface.focus();
     const sel = window.getSelection();
-    if (lastRange && (!sel.rangeCount || !els.surface.contains(sel.anchorNode))) { sel.removeAllRanges(); sel.addRange(lastRange); }
-    const anchor = sel.rangeCount && els.surface.contains(sel.anchorNode) ? topBlockOf(sel.anchorNode) : null;
-    const tail = document.createElement("p");
-    tail.appendChild(document.createElement("br"));            // an empty <p> has no height -> cursor can't enter it
-    const blank = anchor && anchor.tagName === "P" && !anchor.textContent.trim() && !anchor.querySelector("img");
-    if (!anchor) els.surface.append(node, tail);
-    else if (blank) anchor.replaceWith(node, tail);
-    else anchor.after(node, tail);
-    const r = document.createRange();
-    r.setStart(tail, 0); r.collapse(true);
-    sel.removeAllRanges(); sel.addRange(r);
-    tail.scrollIntoView({ block: "nearest" });
+    if (!sel.rangeCount || !els.surface.contains(sel.anchorNode)) {
+      const r = document.createRange();
+      if (lastRange) { r.setStart(lastRange.startContainer, lastRange.startOffset); r.setEnd(lastRange.endContainer, lastRange.endOffset); }
+      else { r.selectNodeContents(els.surface); r.collapse(false); }
+      sel.removeAllRanges(); sel.addRange(r);
+    }
+    // The block always goes BELOW the line the cursor is on (inside an empty line, so the browser keeps
+    // a <div> box as a box instead of flattening it into the paragraph).
+    const top = topBlockOf(sel.anchorNode);
+    const blank = top && top.tagName === "P" && !top.textContent.trim() && !top.querySelector("img, table");
+    if (top && !blank) {
+      const gap = document.createElement("p");
+      gap.appendChild(document.createElement("br"));
+      top.after(gap);
+      const r = document.createRange(); r.setStart(gap, 0); r.collapse(true);
+      sel.removeAllRanges(); sel.addRange(r);
+    }
+    const ok = document.execCommand("insertHTML", false, node.outerHTML + "<p><br></p>");
+    if (!ok) {                                                  // very old browser: plain DOM fallback
+      const tail = document.createElement("p"); tail.appendChild(document.createElement("br"));
+      els.surface.append(node, tail);
+    }
   }
 
   document.getElementById("btn-math-inline").addEventListener("click", () => {
@@ -503,7 +584,7 @@
   document.getElementById("btn-formula-block").addEventListener("click", () => {
     const div = document.createElement("div");
     div.className = "formula-block";
-    div.textContent = "a = bq + r,  where 0 ≤ r < b";
+    div.innerHTML = '<p style="margin:0">a = bq + r,  where 0 ≤ r &lt; b</p>';   // a block child keeps the box a box
     insertBlock(div);
     scheduleAutosave();
   });
@@ -867,7 +948,7 @@
      server confirms a save) ---------- */
   function backupLocally() {
     try {
-      localStorage.setItem(localKey(), JSON.stringify({ ...buildPayload("draft"), savedAt: Date.now() }));
+      localStorage.setItem(localKey(), JSON.stringify({ ...buildPayload("draft"), slug: els.slug.value.trim(), savedAt: Date.now() }));
     } catch (e) {
       /* localStorage unavailable — server autosave is still the
          source of truth, so this is a soft failure */
@@ -1000,7 +1081,8 @@
     autosaveTimer = setTimeout(() => saveToServer(currentStatus === "archived" ? "archived" : "draft", { auto: true }), 2000);
   }
 
-  els.surface.addEventListener("input", scheduleAutosave);
+  els.surface.addEventListener("input", (e) => { if (!e.isComposing) normalizeSurface(); scheduleAutosave(); });
+  els.surface.addEventListener("compositionend", () => { normalizeSurface(); scheduleAutosave(); });
   [els.title, els.slug, els.type, els.level, els.subject, els.chapter, els.language, els.seoTitle, els.metaDesc].forEach((el) => {
     el.addEventListener("input", scheduleAutosave);
     el.addEventListener("change", scheduleAutosave);

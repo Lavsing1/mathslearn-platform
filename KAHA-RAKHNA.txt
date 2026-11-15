@@ -1,0 +1,11 @@
+Is zip ko extract karo, phir andar ke SAB files/folders repo me copy karke replace kar do.
+(KAHA-RAKHNA.txt ko repo me daalne ki zaroorat nahi.)
+
+Badli hui 3 files:
+  admin/js/editor.js     -> repo: admin/js/editor.js
+  admin/css/admin.css    -> repo: admin/css/admin.css
+  css/style.css          -> repo: css/style.css
+
+Baaki saari files pehle jaisi hain. Purana css/admin/ folder is zip me nahi hai (use delete hi rehne do).
+Copy ke baad: git add . && git commit -m "editor fixes" && git push
+Deploy ke baad browser me Ctrl+Shift+R.

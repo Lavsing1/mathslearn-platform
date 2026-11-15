@@ -434,3 +434,9 @@ body.editor-fs .tb-btn.wide { min-width: 38px; }
 /* ---------- MCQ options: evenly spaced, wrap on small screens ---------- */
 .mcq-options { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 2.6rem; margin: 0.4em 0 0.9em; }
 .mcq-opt { white-space: normal; min-width: 4.5rem; }
+
+/* Editor page: show real bullets / numbers while writing (global reset removes them). */
+.editor-surface ul { list-style: disc outside; padding-left: 1.5rem; margin: 0.3em 0 0.6em; }
+.editor-surface ol { list-style: decimal outside; padding-left: 1.5rem; margin: 0.3em 0 0.6em; }
+.editor-surface ul ul { list-style: circle outside; }
+.editor-surface li { margin: 0.15em 0; }

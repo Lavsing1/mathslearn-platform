@@ -663,3 +663,10 @@ html.live-loading .book-grid .book-card:not([data-live]) { visibility: hidden; }
 /* ---------- MCQ options: evenly spaced, wrap on small screens ---------- */
 .mcq-options { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 2.6rem; margin: 0.4em 0 0.9em; }
 .mcq-opt { white-space: normal; min-width: 4.5rem; }
+
+/* Lists written in the editor: the global `ul { list-style:none }` reset hid every bullet,
+   on the student pages and in the PDF. Bring the markers back for content. */
+.article-body ul { list-style: disc outside; padding-left: 1.5rem; }
+.article-body ol { list-style: decimal outside; padding-left: 1.5rem; }
+.article-body li { margin: 0.15em 0; }
+.article-body ul ul { list-style: circle outside; }
